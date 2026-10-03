@@ -1,0 +1,9 @@
+{
+  "id": "Matreshka",
+  "name": "Matreshka",
+  "version": "1.0.0",
+  "minAppVersion": "1.5.0",
+  "description": "Интерактивный дашборд с блоками, блок-схемами и файлами.",
+  "author": "Lemyr",
+  "isDesktopOnly": true
+}

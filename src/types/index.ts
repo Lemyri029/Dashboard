@@ -1,0 +1,146 @@
+// Core type definitions for the Obsidian-style dashboard
+
+export type FileKind =
+  | "folder"
+  | "markdown"
+  | "text"
+  | "pdf"
+  | "hostly"
+  | "flowchart"
+  | "executable"
+  | "image"
+  | "other";
+
+export interface VaultFile {
+  id: string;
+  name: string;
+  kind: FileKind;
+  path: string;
+  size?: number;
+  modified?: string;
+  content?: string;
+  children?: VaultFile[];
+  flowchartId?: string;
+  hostlyId?: string;
+}
+
+export interface BackgroundSettings {
+  enabled: boolean;
+  imagePath: string | null;
+  imageUrl: string | null;
+  dim: number;
+  blur: number;
+}
+
+export const DEFAULT_BACKGROUND: BackgroundSettings = {
+  enabled: true,
+  imagePath: null,
+  imageUrl: null,
+  dim: 0.55,
+  blur: 0,
+};
+
+export type BlockType =
+  | "group"
+  | "note"
+  | "file-list"
+  | "flowchart"
+  | "hostly"
+  | "link"
+  | "graph"
+  | "checklist"
+  | "board-list";
+
+export interface ChecklistItem {
+  id: string;
+  label: string;
+  done: boolean;
+}
+
+export interface LinkEntry {
+  id: string;
+  url: string;
+  label: string;
+}
+
+export interface BlockData {
+  markdown?: string;
+  fileIds?: string[];
+  folderPaths?: string[];
+  attachmentOrder?: string[];
+  url?: string;
+  linkLabel?: string;
+  links?: LinkEntry[];
+  flowchartId?: string;
+  flowchartIds?: string[];
+  hostlyId?: string;
+  items?: ChecklistItem[];
+  boardIds?: string[];
+}
+export interface Block {
+  id: string;
+  type: BlockType;
+  title: string;
+  icon?: string;
+  accent?: string;
+  collapsed?: boolean;
+  data: BlockData;
+  children: Block[];
+}
+
+export interface Board {
+  id: string;
+  title: string;
+  blocks: Block[];
+}
+
+export interface FlowNodeData {
+  label: string;
+  note?: string;
+}
+
+export interface FlowchartDoc {
+  id: string;
+  name: string;
+  nodes: {
+    id: string;
+    position: { x: number; y: number };
+    data: FlowNodeData;
+    type?: string;
+    style?: Record<string, unknown>;
+  }[];
+  edges: {
+    id: string;
+    source: string;
+    target: string;
+    label?: string;
+    animated?: boolean;
+  }[];
+}
+
+export interface HostlyService {
+  id: string;
+  name: string;
+  host: string;
+  port: number;
+  protocol: "http" | "https" | "tcp" | "ssh" | "ws";
+  status: "online" | "offline" | "degraded" | "unknown";
+  tags: string[];
+  notes?: string;
+}
+
+export interface HostlyDoc {
+  id: string;
+  name: string;
+  environment: string;
+  services: HostlyService[];
+}
+
+export type ToastKind = "info" | "success" | "warning" | "error";
+
+export interface ToastItem {
+  id: string;
+  kind: ToastKind;
+  title: string;
+  message?: string;
+}
