@@ -5,7 +5,6 @@ export type FileKind =
   | "markdown"
   | "text"
   | "pdf"
-  | "hostly"
   | "flowchart"
   | "executable"
   | "image"
@@ -21,7 +20,6 @@ export interface VaultFile {
   content?: string;
   children?: VaultFile[];
   flowchartId?: string;
-  hostlyId?: string;
 }
 
 export interface BackgroundSettings {
@@ -45,7 +43,6 @@ export type BlockType =
   | "note"
   | "file-list"
   | "flowchart"
-  | "hostly"
   | "link"
   | "graph"
   | "checklist"
@@ -73,7 +70,6 @@ export interface BlockData {
   links?: LinkEntry[];
   flowchartId?: string;
   flowchartIds?: string[];
-  hostlyId?: string;
   items?: ChecklistItem[];
   boardIds?: string[];
 }
@@ -116,24 +112,6 @@ export interface FlowchartDoc {
     label?: string;
     animated?: boolean;
   }[];
-}
-
-export interface HostlyService {
-  id: string;
-  name: string;
-  host: string;
-  port: number;
-  protocol: "http" | "https" | "tcp" | "ssh" | "ws";
-  status: "online" | "offline" | "degraded" | "unknown";
-  tags: string[];
-  notes?: string;
-}
-
-export interface HostlyDoc {
-  id: string;
-  name: string;
-  environment: string;
-  services: HostlyService[];
 }
 
 export type ToastKind = "info" | "success" | "warning" | "error";

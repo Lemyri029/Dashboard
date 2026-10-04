@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, ExternalLink, FolderOpen, Trash2, PlayCircle } from "lucide-react";
 import { useDashboardStore } from "../../store/dashboardStore";
-import { flattenFiles } from "../../utils/vault";
+import { flattenFiles, isLaunchable } from "../../utils/vault";
 import { FileIcon } from "../FileIcon";
 
 export function FilePicker({
@@ -25,10 +25,14 @@ export function FilePicker({
   const btnRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({
-  top: 80,
-  left: Math.max(16, window.innerWidth / 2 - 160),
-  width: 320,
-});
+    top: 80,
+    left: Math.max(16, window.innerWidth / 2 - 160),
+    width: 320,
+  });
+
+  // Контекстное меню для файла
+  const [menuPos, setMenuPos] = useState<{ x: number; y: number; fileId: string } | null>(null);
+  const fileMenuRef = useRef<HTMLDivElement>(null);
 
   const options = useMemo(() => {
     const all = flattenFiles(vault).filter(
@@ -58,6 +62,20 @@ export function FilePicker({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isControlled, onClose]);
 
+  // Закрытие контекстного меню при клике вне
+  useEffect(() => {
+    if (!menuPos) return;
+
+    function handleClickOutside(e: MouseEvent) {
+      if (fileMenuRef.current && !fileMenuRef.current.contains(e.target as Node)) {
+        setMenuPos(null);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuPos]);
+
   function toggleMenu() {
     if (!isOpen && btnRef.current) {
       const rect = btnRef.current.getBoundingClientRect();
@@ -71,7 +89,6 @@ export function FilePicker({
     }
     if (isControlled) {
       // При управлении извне просто открываем/закрываем через родителя
-      // Но toggleMenu вызывается только от кнопки, а кнопки нет в этом режиме
     } else {
       setInternalOpen((o) => !o);
       setQ("");
@@ -88,9 +105,74 @@ export function FilePicker({
     setQ("");
   }
 
+  // --- Контекстное меню для файла ---
+  const navigate = useDashboardStore((state) => state.navigate);
+  const launchProgram = useDashboardStore((state) => state.launchProgram);
+  const revealInExplorer = useDashboardStore((state) => state.revealInExplorer);
+  const deleteFile = useDashboardStore((state) => state.deleteFile);
+
+  function handleContextMenu(e: React.MouseEvent, fileId: string) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const MENU_WIDTH = 176;
+    const MENU_HEIGHT = 160; // Высота меню
+    const GAP = 8;
+
+    let x = e.clientX;
+    let y = e.clientY;
+
+    if (x + MENU_WIDTH > window.innerWidth - GAP) {
+      x = window.innerWidth - MENU_WIDTH - GAP;
+    }
+    if (y + MENU_HEIGHT > window.innerHeight - GAP) {
+      y = e.clientY - MENU_HEIGHT;
+    }
+    if (y < GAP) y = GAP;
+
+    setMenuPos({ x, y, fileId });
+  }
+
+  function closeFileMenu() {
+    setMenuPos(null);
+  }
+
+  const currentFile = options.find(f => f.id === menuPos?.fileId);
+
+  async function handleDelete(fileId: string) {
+    const file = options.find(f => f.id === fileId);
+    if (!file) return;
+
+    const confirmed = window.confirm(
+      `Удалить файл «${file.name}»?\n\nФайл будет перемещён в корзину согласно настройкам Obsidian.`
+    );
+    if (!confirmed) return;
+
+    await deleteFile(file.path);
+    closeFileMenu();
+  }
+
+  function openFile(file: any) {
+    if (isLaunchable(file)) {
+      launchProgram(file);
+      return;
+    }
+
+    if (file.kind === "flowchart") {
+      navigate({ name: "flowchart", path: file.path });
+      return;
+    }
+
+    if (file.kind === "hostly") {
+      navigate({ name: "hostly", path: file.path });
+      return;
+    }
+
+    navigate({ name: "file", path: file.path });
+  }
+
   return (
     <>
-      {/* Большая кнопка снизу — только если режим не управляемый */}
       {!isControlled && (
         <button
           ref={btnRef}
@@ -135,6 +217,7 @@ export function FilePicker({
                 <button
                   key={f.id}
                   onClick={() => handlePick(f.id)}
+                  onContextMenu={(e) => handleContextMenu(e, f.id)}
                   className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-slate-200 hover:bg-white/5"
                 >
                   <FileIcon kind={f.kind} className="h-4 w-4 shrink-0" />
@@ -148,6 +231,66 @@ export function FilePicker({
           </div>,
           document.body
         )}
+
+      {/* Контекстное меню для файла */}
+      {menuPos && currentFile &&
+        createPortal(
+          <div
+            ref={fileMenuRef}
+            style={{ left: menuPos.x, top: menuPos.y }}
+            className="fixed z-[9999] w-44 rounded-md border border-white/10 bg-[#1e1e1e] p-1 shadow-xl"
+          >
+            <div className="flex flex-col gap-0.5">
+              {isLaunchable(currentFile) ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    launchProgram(currentFile);
+                    closeFileMenu();
+                  }}
+                  className="flex items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-emerald-300 hover:bg-emerald-400/10"
+                >
+                  <PlayCircle size={14} />
+                  Запустить
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    openFile(currentFile);
+                    closeFileMenu();
+                  }}
+                  className="flex items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-cyan-300 hover:bg-cyan-400/10"
+                >
+                  <ExternalLink size={14} />
+                  Открыть
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => {
+                  revealInExplorer(currentFile);
+                  closeFileMenu();
+                }}
+                className="flex items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-slate-400 hover:bg-white/10 hover:text-slate-200"
+              >
+                <FolderOpen size={14} />
+                B проводнике
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleDelete(currentFile.id)}
+                className="flex items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-rose-400 hover:bg-rose-400/10 hover:text-rose-300"
+              >
+                <Trash2 size={14} />
+                Удалить
+              </button>
+            </div>
+          </div>,
+          document.body
+        )}
     </>
   );
-}
+} 

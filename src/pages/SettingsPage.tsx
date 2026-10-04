@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import {
   Settings2,
   RefreshCw,
-  Info,
   Palette,
   Trash2,
   Image as ImageIcon,
@@ -543,7 +542,6 @@ export default function SettingsPage() {
         </div>
         <div>
           <h1 className="text-xl font-bold tracking-tight text-slate-100">Настройки</h1>
-          <p className="text-xs text-slate-500">Matreshka — плагин Obsidian</p>
         </div>
       </div>
 
@@ -581,15 +579,6 @@ export default function SettingsPage() {
             >
               <Trash2 size={12} /> Очистить блоки
             </button>
-          </div>
-        </section>
-
-        <section className="glass-panel flex items-start gap-3 rounded-xl p-5">
-          <Info size={16} className="mt-0.5 shrink-0 text-slate-400" />
-          <div className="text-xs leading-relaxed text-slate-400">
-            <p className="mb-1 font-medium text-slate-300">Matreshka v1.0.0</p>
-            Нативный плагин Obsidian: вложенные блоки, просмотр файлов, редактор блок-схем и формат
-            .hostly — всё работает напрямую c вашим хранилищем, без сторонних сервисов.
           </div>
         </section>
       </div>

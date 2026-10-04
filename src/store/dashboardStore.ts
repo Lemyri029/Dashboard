@@ -7,7 +7,6 @@ import type {
   BlockType,
   Board,
   FlowchartDoc,
-  HostlyDoc,
   ToastItem,
   ToastKind,
   VaultFile,
@@ -24,7 +23,6 @@ const BLOCK_LABELS: Record<BlockType, string> = {
   note: "Заметка",
   "file-list": "Файлы",
   flowchart: "Доска",
-  hostly: "Hostly",
   link: "Ссылка",
   graph: "Граф связей",
   checklist: "Чек-лист",
@@ -99,7 +97,6 @@ export type Page =
   | { name: "dashboard" }
   | { name: "file"; path: string }
   | { name: "flowchart"; path: string }
-  | { name: "hostly"; path: string }
   | { name: "board"; boardId: string }
   | { name: "files" }
   | { name: "settings" };
@@ -186,11 +183,6 @@ interface DashboardState {
   loadFlowchart: (path: string) => Promise<FlowchartDoc>;
   saveFlowchart: (path: string, doc: FlowchartDoc) => Promise<void>;
   createFlowchartFile: (name: string) => Promise<string>;
-
-  hostlyCache: Record<string, HostlyDoc>;
-  loadHostly: (path: string) => Promise<HostlyDoc>;
-  saveHostly: (path: string, doc: HostlyDoc) => Promise<void>;
-  createHostlyFile: (name: string) => Promise<string>;
 
   customLogo: string | null;
   setCustomLogo: (logo: string | null) => void;
@@ -511,16 +503,16 @@ importBackupFromFile: async (file) => {
           set((state) => {
             const fileContents = { ...state.fileContents };
             const flowchartCache = { ...state.flowchartCache };
-            const hostlyCache = { ...state.hostlyCache };
+            
 
             delete fileContents[path];
             delete flowchartCache[path];
-            delete hostlyCache[path];
+            
 
             return {
               fileContents,
               flowchartCache,
-              hostlyCache,
+              
             };
           });
 
@@ -596,47 +588,6 @@ importBackupFromFile: async (file) => {
         set((s) => ({ flowchartCache: { ...s.flowchartCache, [fileName]: doc } }));
         get().refreshVault();
         get().pushToast("success", "Схема создана", fileName);
-        return fileName;
-      },
-
-      hostlyCache: {},
-
-      loadHostly: async (path) => {
-        const cached = get().hostlyCache[path];
-        if (cached) return cached;
-        const content = await get().loadFileContent(path);
-        let doc: HostlyDoc;
-        try {
-          doc = content
-            ? JSON.parse(content)
-            : { id: path, name: path, environment: "", services: [] };
-        } catch {
-          doc = { id: path, name: path, environment: "", services: [] };
-        }
-        set((s) => ({ hostlyCache: { ...s.hostlyCache, [path]: doc } }));
-        return doc;
-      },
-
-      saveHostly: async (path, doc) => {
-        await get().updateFileContent(path, JSON.stringify(doc, null, 2));
-        set((s) => ({ hostlyCache: { ...s.hostlyCache, [path]: doc } }));
-      },
-
-      createHostlyFile: async (name) => {
-        const app = get().app;
-        if (!app) return "";
-        let fileName = name.trim() || "Новый hostly";
-        if (!fileName.toLowerCase().endsWith(".hostly")) fileName += ".hostly";
-        const existing = app.vault.getAbstractFileByPath(fileName);
-        if (existing) {
-          get().pushToast("warning", "Файл уже существует", fileName);
-          return fileName;
-        }
-        const doc: HostlyDoc = { id: fileName, name: fileName, environment: "", services: [] };
-        await writeFileContent(app, fileName, JSON.stringify(doc, null, 2));
-        set((s) => ({ hostlyCache: { ...s.hostlyCache, [fileName]: doc } }));
-        get().refreshVault();
-        get().pushToast("success", "Hostly-файл создан", fileName);
         return fileName;
       },
 

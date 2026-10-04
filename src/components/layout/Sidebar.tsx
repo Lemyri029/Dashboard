@@ -187,18 +187,6 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       <ToiletBreakTimer />
       <CalendarWidget />
 
-      <div
-        className="px-4 py-3"
-        style={{ borderTop: "1px solid var(--nd-panel-border)" }}
-      >
-        <div
-          className="flex items-center gap-2 text-[11px]"
-          style={{ color: "var(--nd-text-faint)" }}
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse-glow" />
-          Avilex Dashboard: <span className="text-emerald-400">плагин активен</span>
-        </div>
-      </div>
     </aside>
   );
 }

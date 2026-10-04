@@ -35,9 +35,8 @@ export function CommandPalette() {
     return files.filter((f) => f.name.toLowerCase().includes(q) || f.path.toLowerCase().includes(q)).slice(0, 12);
   }, [files, query]);
 
-  function go(path: string, kind: string) {
+   function go(path: string, kind: string) {
     if (kind === "flowchart") navigate({ name: "flowchart", path });
-    else if (kind === "hostly") navigate({ name: "hostly", path });
     else navigate({ name: "file", path });
     setOpen(false);
     setQuery("");
