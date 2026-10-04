@@ -536,22 +536,17 @@ export function BlockNode({
           {renderContent()}
 
           {block.children.length > 0 && (
-            <div
-              className={cn(
-                "space-y-1.5 border-l-2 border-dashed pl-2.5",
-                accent.border
-              )}
-            >
-              {block.children.map((child) => (
-                <BlockNode
-                  key={child.id}
-                  block={child}
-                  depth={depth + 1}
-                  boardId={boardId}
-                />
-              ))}
-            </div>
-          )}
+  <div className="space-y-1.5 pl-2.5">
+    {block.children.map((child) => (
+      <BlockNode
+        key={child.id}
+        block={child}
+        depth={depth + 1}
+        boardId={boardId}
+      />
+    ))}
+  </div>
+)}
         </div>
       )}
 

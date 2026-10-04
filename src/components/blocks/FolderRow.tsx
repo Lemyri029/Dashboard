@@ -97,13 +97,11 @@ export function FolderRow({
       onDrop={onDrop}
       onDragEnd={onDragEnd}
       onContextMenu={handleContextMenu}
-      className={`group flex items-center gap-2 rounded-md border px-2 py-1.5 transition ${
-        isDragOver
-          ? "border-amber-400/50 bg-amber-400/10"
-          : "border-white/5 bg-white/[0.02] hover:border-amber-400/20 hover:bg-white/[0.04]"
+            className={`group nd-row flex items-center gap-2 rounded-md px-2 py-1.5 transition ${
+        isDragOver ? "nd-row--drag" : ""
       } ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`}
     >
-      <Folder size={14} className="h-3.5 w-3.5 shrink-0 text-amber-300/80" />
+            <Folder size={14} className="nd-row__folder-icon h-3.5 w-3.5 shrink-0" />
 
             <button
         type="button"
@@ -111,13 +109,13 @@ export function FolderRow({
         className="min-w-0 flex-1 overflow-hidden text-center"
         title={`Открыть в проводнике: ${path}`}
       >
-        <p className="block w-full truncate text-center text-xs text-slate-200">
+                <p className="nd-row__name block w-full truncate text-center text-xs">
           {basename(path)}
         </p>
       </button>
 
       <span className="flex w-[72px] shrink-0 flex-col items-end justify-center leading-tight">
-        <span className="rounded-full bg-amber-400/10 px-1.5 py-0.5 text-[9px] text-amber-300/80 ring-1 ring-amber-400/20">
+                <span className="nd-row__badge-amber rounded-full px-1.5 py-0.5 text-[9px]">
           Папка
         </span>
       </span>

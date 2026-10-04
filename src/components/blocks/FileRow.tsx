@@ -193,10 +193,8 @@ export function FileRow({
       onDrop={onDrop}
       onDragEnd={onDragEnd}
       onContextMenu={handleContextMenu}
-      className={`group flex items-center gap-2 rounded-md border px-2 py-1.5 transition ${
-        isDragOver
-          ? "border-cyan-400/50 bg-cyan-400/10"
-          : "border-white/5 bg-white/[0.02] hover:border-cyan-400/20 hover:bg-white/[0.04]"
+            className={`group nd-row flex items-center gap-2 rounded-md px-2 py-1.5 transition ${
+        isDragOver ? "nd-row--drag" : ""
       } ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`}
     >
       <FileIcon
@@ -215,12 +213,12 @@ export function FileRow({
             : `Открыть ${file.name}`
         }
       >
-        <p className="block w-full truncate text-center text-xs text-slate-200">
+        <p className="nd-row__name block w-full truncate text-center text-xs">
           {file.name}
         </p>
 
         {!hidePath && (
-          <p className="block w-full truncate text-center font-mono-techno text-[9px] text-slate-500">
+           <p className="nd-row__faint block w-full truncate text-center font-mono-techno text-[9px]">
             {file.path}
           </p>
         )}
@@ -228,10 +226,10 @@ export function FileRow({
 
       {/* Тип и размер друг над другом */}
       <span className="flex w-[72px] shrink-0 flex-col items-end justify-center leading-tight">
-        <span className="rounded-full bg-white/5 px-1.5 py-0.5 text-[9px] text-slate-400">
+        <span className="nd-row__badge rounded-full px-1.5 py-0.5 text-[9px]">
           {KIND_LABEL[file.kind]}
         </span>
-        <span className="mt-0.5 text-[9px] text-slate-500">
+                <span className="nd-row__faint mt-0.5 text-[9px]">
           {formatBytes(file.size)}
         </span>
       </span>

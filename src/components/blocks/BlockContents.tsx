@@ -587,7 +587,7 @@ if ($dialog.ShowDialog() -eq 'OK') { Write-Output $dialog.SelectedPath }
       })}
 
       {attachmentOrder.length === 0 && (
-        <p className="rounded-lg border border-dashed border-white/10 py-3 text-center text-xs text-slate-500">
+        <p className="rounded-lg border border-white/10 py-3 text-center text-xs text-slate-500">
           Нет файлов. Нажмите ПКМ по блоку — прикрепите файл или папку.
         </p>
       )}
@@ -901,7 +901,7 @@ export function LinkContent({ block, boardId }: { block: Block; boardId?: string
             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
             style={{
               background: "transparent",
-              border: "1px dashed rgba(255,255,255,0.25)",
+              border: "1px solid rgba(255,255,255,0.15)",
               boxShadow: "none",
               padding: 0,
             }}
@@ -910,7 +910,7 @@ export function LinkContent({ block, boardId }: { block: Block; boardId?: string
               e.currentTarget.style.background = "rgba(56,232,255,0.08)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)";
+              e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
               e.currentTarget.style.background = "transparent";
             }}
           >
@@ -941,7 +941,7 @@ export function LinkContent({ block, boardId }: { block: Block; boardId?: string
       </div>
 
       {links.length === 0 && !addingNew && (
-        <p className="rounded-lg border border-dashed border-white/10 py-3 text-center text-xs text-slate-500">
+        <p className="rounded-lg border border-white/10 py-3 text-center text-xs text-slate-500">
           Ссылок пока нет
         </p>
       )}
@@ -1111,7 +1111,7 @@ export function BoardListContent({ block, boardId }: { block: Block; boardId?: s
         );
       })}
       {ids.length === 0 && (
-        <p className="rounded-lg border border-dashed border-white/10 py-3 text-center text-xs text-slate-500">
+        <p className="rounded-lg border border-white/10 py-3 text-center text-xs text-slate-500">
           Список пуст
         </p>
       )}
@@ -1421,7 +1421,7 @@ if ($dialog.ShowDialog() -eq 'OK') { Write-Output $dialog.FileName }
       })}
 
       {ids.length === 0 && (
-        <p className="rounded-lg border border-dashed border-white/10 py-3 text-center text-xs text-slate-500">
+        <p className="rounded-lg border border-white/10 py-3 text-center text-xs text-slate-500">
           Нет досок. Создайте новую ниже или нажмите ПКМ по блоку — Добавить доску.
         </p>
       )}

@@ -47,14 +47,14 @@ function BlockMenuOptions({
           type="button"
           key={opt.type}
           onClick={() => onSelect(opt.type)}
-          className="relative flex w-full items-center justify-center rounded-md px-8 py-2 text-center transition hover:bg-white/5"
+          className="nd-menu-option relative flex w-full items-center justify-center rounded-md px-8 py-2 text-center transition"
         >
           <opt.icon
             size={15}
-            className="absolute left-3 shrink-0 text-cyan-300"
+            className="nd-icon-accent absolute left-3 shrink-0"
           />
 
-          <span className="truncate text-sm font-medium text-slate-200">
+          <span className="nd-menu-item truncate text-sm font-medium">
             {opt.label}
           </span>
         </button>
@@ -135,12 +135,12 @@ export function AddBlockMenu({
         type="button"
         ref={btnRef}
         onClick={toggle}
-        className={cn(
-          "inline-flex items-center gap-1.5 rounded-md border border-cyan-400/20 bg-cyan-400/5 px-2.5 py-1.5 text-xs font-medium text-cyan-300 transition hover:bg-cyan-400/15",
-          compact && "px-2 py-1"
-        )}
+          className={cn(
+  "nd-btn-add-button inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition hover:opacity-80",
+  compact && "px-2 py-1"
+)}
       >
-        <Plus size={13} />
+        <Plus className="nd-icon-accent" size={13} />
         Блок
       </button>
 

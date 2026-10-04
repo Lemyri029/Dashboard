@@ -1,6 +1,5 @@
 import { LayoutDashboard, FolderTree, Settings, Search, Command } from "lucide-react";
 import { useDashboardStore, type Page } from "../../store/dashboardStore";
-import { cn } from "../../utils/cn";
 import logoIcon from "../../assets/logo-icon.png";
 import logoMain from "../../assets/logo-main.png";
 import logoSub from "../../assets/logo-sub.png";
@@ -21,9 +20,14 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <aside
-      className="flex h-screen w-72 shrink-0 flex-col border-r border-white/5 bg-[#070a0f]/95 lg:h-full"
+      className="flex h-screen w-72 shrink-0 flex-col lg:h-full"
+      style={{
+        background: "var(--nd-bg-soft)",
+        borderRight: "1px solid var(--nd-panel-border)",
+        color: "var(--nd-text)",
+      }}
     >
-            {/* ===== ЛОГОТИП ===== */}
+      {/* ===== ЛОГОТИП ===== */}
       <div
         style={{
           height: "190px",
@@ -32,7 +36,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           flexShrink: 0,
           flexGrow: 0,
           overflow: "hidden",
-          borderBottom: "1px solid rgba(255,255,255,0.05)",
+          borderBottom: "1px solid var(--nd-panel-border)",
           padding: "0 20px",
           display: "flex",
           alignItems: "center",
@@ -108,11 +112,30 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       <div className="px-3 pt-3">
         <button
           onClick={() => setCommandPaletteOpen(true)}
-          className="flex w-full items-center gap-2 rounded-lg border border-white/5 bg-white/[0.03] px-3 py-2 text-sm text-slate-400 transition hover:border-cyan-400/30 hover:text-slate-200"
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition"
+          style={{
+            border: "1px solid var(--nd-panel-border)",
+            background: "var(--nd-panel)",
+            color: "var(--nd-text-muted)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = "var(--nd-accent)";
+            e.currentTarget.style.color = "var(--nd-text)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = "var(--nd-panel-border)";
+            e.currentTarget.style.color = "var(--nd-text-muted)";
+          }}
         >
           <Search size={14} />
           <span className="flex-1 text-left">Быстрый поиск...</span>
-          <span className="flex items-center gap-0.5 rounded border border-white/10 px-1.5 py-0.5 text-[10px] text-slate-500">
+          <span
+            className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px]"
+            style={{
+              border: "1px solid var(--nd-panel-border)",
+              color: "var(--nd-text-faint)",
+            }}
+          >
             <Command size={10} />K
           </span>
         </button>
@@ -128,12 +151,31 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                 navigate(item.page);
                 onNavigate?.();
               }}
-              className={cn(
-                "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors"
+              style={
                 isActive
-                  ? "bg-cyan-400/10 text-cyan-300 ring-1 ring-cyan-400/20"
-                  : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
-              )}
+                  ? {
+                      background:
+                        "color-mix(in srgb, var(--nd-accent) 14%, transparent)",
+                      color: "var(--nd-accent)",
+                      boxShadow: "inset 0 0 0 1px var(--nd-accent)",
+                    }
+                  : {
+                      color: "var(--nd-text-muted)",
+                    }
+              }
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = "var(--nd-panel-hover)";
+                  e.currentTarget.style.color = "var(--nd-text)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.color = "var(--nd-text-muted)";
+                }
+              }}
             >
               <item.icon size={16} />
               {item.label}
@@ -145,8 +187,14 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       <ToiletBreakTimer />
       <CalendarWidget />
 
-      <div className="border-t border-white/5 px-4 py-3">
-        <div className="flex items-center gap-2 text-[11px] text-slate-500">
+      <div
+        className="px-4 py-3"
+        style={{ borderTop: "1px solid var(--nd-panel-border)" }}
+      >
+        <div
+          className="flex items-center gap-2 text-[11px]"
+          style={{ color: "var(--nd-text-faint)" }}
+        >
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse-glow" />
           Avilex Dashboard: <span className="text-emerald-400">плагин активен</span>
         </div>

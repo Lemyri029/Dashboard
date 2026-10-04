@@ -31,6 +31,6 @@ export default function App() {
         return <DashboardPage />;
     }
   }
-
+  
   return <Layout>{renderPage()}</Layout>;
 }

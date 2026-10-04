@@ -82,6 +82,43 @@ export const BASE_UI: ThemeUi = {
   gridSize: "32px",
 };
 
+/** Светлая база: подставляется, если у загруженной темы светлый фон */
+export const BASE_COLORS_LIGHT: ThemeColors = {
+  bg: "#f2f4f7",
+  bgSoft: "#e7ebf0",
+  text: "#1c2330",
+  textSecondary: "#333c4d",
+  textMuted: "#5b6675",
+  textFaint: "#8a94a3",
+  panel: "rgba(255, 255, 255, 0.94)",
+  panelHover: "rgba(255, 255, 255, 0.98)",
+  panelBorder: "rgba(16, 24, 40, 0.10)",
+  accent: "#0891b2",
+  accentLight: "#06b6d4",
+  accent2: "#7c3aed",
+  accentText: "#ffffff",
+  grid: "rgba(8, 145, 178, 0.08)",
+  glow: "rgba(8, 145, 178, 0.20)",
+  scrollbar: "rgba(8, 145, 178, 0.25)",
+  miroPort: "#0891b2",
+  radial1: "rgba(8, 145, 178, 0.10)",
+  radial2: "rgba(124, 58, 237, 0.08)",
+};
+
+/** Яркость hex-цвета: 0 = чёрный, 1 = белый. null, если цвет не в hex-формате */
+function luminance(color: string): number | null {
+  let hex = color.trim().replace(/^#/, "");
+  if (/^[0-9a-fA-F]{3}$/.test(hex)) {
+    hex = hex.split("").map((ch) => ch + ch).join("");
+  }
+  if (!/^[0-9a-fA-F]{6}$/.test(hex)) return null;
+  const r = parseInt(hex.slice(0, 2), 16) / 255;
+  const g = parseInt(hex.slice(2, 4), 16) / 255;
+  const b = parseInt(hex.slice(4, 6), 16) / 255;
+  const lin = (v: number) => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+}
+
 function mk(
   id: string,
   label: string,
@@ -206,7 +243,24 @@ export function normalizeTheme(raw: unknown, fallbackId: string): DashboardTheme
   const r = raw as Record<string, any>;
 
   const id = typeof r.id === "string" && r.id.trim() ? r.id.trim() : fallbackId;
-  const colors: ThemeColors = { ...BASE_COLORS, ...(r.colors ?? {}) };
+
+  // 1. Смотрим на фон темы: если он светлый — берём светлую базу, 
+  //    чтобы текст и панели были читаемыми даже если автор темы
+  //    не задал эти цвета явно.
+  const rawBg = typeof r.colors?.bg === "string" ? r.colors.bg : BASE_COLORS.bg;
+  const bgLum = luminance(rawBg);
+  const base = bgLum !== null && bgLum > 0.35 ? BASE_COLORS_LIGHT : BASE_COLORS;
+
+  // 2. Цвета, явно заданные в JSON, всегда в приоритете над базой.
+  const colors: ThemeColors = { ...base, ...(r.colors ?? {}) };
+
+  // 3. Если не задан цвет текста на акцентных кнопках — подбираем
+  //    автоматически по яркости акцента.
+  if (typeof r.colors?.accentText !== "string") {
+    const aLum = luminance(colors.accent);
+    if (aLum !== null) colors.accentText = aLum > 0.35 ? "#0b0f14" : "#ffffff";
+  }
+
   const ui: ThemeUi = { ...BASE_UI, ...(r.ui ?? {}) };
 
   const preview: [string, string, string, string] =

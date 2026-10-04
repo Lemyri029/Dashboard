@@ -18,7 +18,7 @@ import {
   saveBackgroundFile,
   ImageSuggestModal,
 } from "../utils/background";
-import { THEME_LIST, type DashboardTheme } from "../utils/themes";
+import { type DashboardTheme } from "../utils/themes";
 import { THEMES_FOLDER, createThemeTemplate } from "../utils/themeLoader";
 
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
@@ -412,18 +412,6 @@ function ThemeSection() {
         >
           <FolderOpen size={13} /> Создать шаблон темы
         </button>
-      </div>
-
-      <div className="mb-2 text-[11px] uppercase tracking-wide text-slate-500">Встроенные</div>
-      <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {THEME_LIST.map((item) => (
-          <ThemeCard
-            key={item.id}
-            item={item}
-            selected={theme === item.id}
-            onSelect={() => setTheme(item.id)}
-          />
-        ))}
       </div>
 
       <div className="mb-2 text-[11px] uppercase tracking-wide text-slate-500">

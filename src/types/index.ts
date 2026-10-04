@@ -144,3 +144,27 @@ export interface ToastItem {
   title: string;
   message?: string;
 }
+
+export type AppTheme = {
+  id: string;
+  name: string;
+  description?: string;
+  colors: {
+    bgMain: string;          // главный фон
+    bgSecondary: string;     // фон сайдбара
+    surface: string;         // фон блоков glass-panel
+    surfaceHover: string;
+    surfaceActive: string;
+    border: string;
+    borderHover: string;
+    text: string;
+    textMuted: string;
+    textFaint: string;
+    accent: string;
+    accentHover: string;
+  };
+  effects?: {
+    blur?: string;
+    radius?: string;
+  }
+}
