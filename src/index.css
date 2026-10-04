@@ -1,3 +1,4 @@
+
 @import "tailwindcss/theme.css";
 @import "tailwindcss/utilities.css";
 
@@ -17,8 +18,8 @@ body,
 
 body {
   font-family: "Sora", "Inter", system-ui, -apple-system, sans-serif;
-  background-color: #05070a;
-  color: #e6edf3;
+  background-color: var(--nd-bg, #05070a);
+  color: var(--nd-text, #e6edf3);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -83,9 +84,9 @@ body {
 }
 
 .glass-panel {
-  background: linear-gradient(180deg, rgba(17, 22, 29, 0.85), rgba(10, 13, 17, 0.85));
-  border: 1px solid rgba(148, 163, 184, 0.12);
-  backdrop-filter: blur(12px);
+  background: var(--nd-panel, rgba(10, 14, 20, 0.94));
+  border: 1px solid var(--nd-panel-border, rgba(255, 255, 255, 0.07));
+  backdrop-filter: blur(var(--nd-blur, 12px));
 }
 
 .glow-border {
@@ -264,4 +265,195 @@ body {
 }
 .nexus-dashboard-root *::-webkit-scrollbar-thumb:hover {
   background: var(--nd-accent, rgba(56, 232, 255, 0.4));
+}
+/* ===== Тема-адаптивные строки (файлы / папки) =====
+   Фон и рамка строки — полупрозрачный тон текущего цвета текста,
+   поэтому строка всегда контрастная на любой теме. */
+.nd-row {
+  border: 1px solid color-mix(in srgb, var(--nd-text, #e6edf3) 14%, transparent);
+  background-color: color-mix(in srgb, var(--nd-text, #e6edf3) 4%, transparent);
+}
+.nd-row:hover {
+  background-color: color-mix(in srgb, var(--nd-text, #e6edf3) 8%, transparent);
+  border-color: color-mix(in srgb, var(--nd-accent, #22d3ee) 45%, transparent);
+}
+.nd-row--drag {
+  border-color: color-mix(in srgb, var(--nd-accent, #22d3ee) 60%, transparent);
+  background-color: color-mix(in srgb, var(--nd-accent, #22d3ee) 12%, transparent);
+}
+.nd-row__name  { color: var(--nd-text, #e6edf3); }
+.nd-row__meta  { color: var(--nd-text-muted, #94a3b8); }
+.nd-row__faint { color: var(--nd-text-faint, #64748b); }
+.nd-row__badge {
+  background-color: color-mix(in srgb, var(--nd-text, #e6edf3) 8%, transparent);
+  color: var(--nd-text-muted, #94a3b8);
+}
+/* Янтарный акцент папок: адаптируется к теме через color-mix,
+   чтобы оставаться читаемым и на светлом, и на тёмном фоне. */
+.nd-row__folder-icon {
+  color: color-mix(in srgb, #f59e0b 55%, var(--nd-text, #e6edf3) 45%);
+}
+.nd-row__badge-amber {
+  background-color: color-mix(in srgb, #f59e0b 14%, transparent);
+  color: color-mix(in srgb, #f59e0b 50%, var(--nd-text, #e6edf3) 50%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #f59e0b 30%, transparent);
+}
+/* ===== Тема-адаптивные элементы внутри блоков ===== */
+.nd-text-secondary { color: var(--nd-text-secondary, #cbd5e1); }
+.nd-text-muted     { color: var(--nd-text-muted, #94a3b8); }
+.nd-text-faint     { color: var(--nd-text-faint, #64748b); }
+
+.nd-input {
+  border: 1px solid color-mix(in srgb, var(--nd-text, #e6edf3) 15%, transparent);
+  background-color: color-mix(in srgb, var(--nd-text, #e6edf3) 5%, transparent);
+  color: var(--nd-text, #e6edf3);
+}
+.nd-input::placeholder { color: var(--nd-text-faint, #64748b); }
+.nd-input:focus {
+  border-color: color-mix(in srgb, var(--nd-accent, #22d3ee) 55%, transparent);
+  outline: none;
+}
+
+.nd-textarea {
+  border: 1px solid color-mix(in srgb, var(--nd-text, #e6edf3) 15%, transparent);
+  background-color: color-mix(in srgb, var(--nd-text, #e6edf3) 5%, transparent);
+  color: var(--nd-text, #e6edf3);
+}
+.nd-textarea:focus {
+  border-color: color-mix(in srgb, var(--nd-accent, #22d3ee) 55%, transparent);
+  outline: none;
+}
+
+.nd-btn-accent {
+  background-color: color-mix(in srgb, var(--nd-accent, #22d3ee) 18%, transparent);
+  color: color-mix(in srgb, var(--nd-accent, #22d3ee) 60%, var(--nd-text, #e6edf3) 40%);
+}
+.nd-btn-accent:hover {
+  background-color: color-mix(in srgb, var(--nd-accent, #22d3ee) 30%, transparent);
+}
+
+.nd-btn-ghost { color: var(--nd-text-muted, #94a3b8); }
+.nd-btn-ghost:hover {
+  background-color: color-mix(in srgb, var(--nd-text, #e6edf3) 7%, transparent);
+}
+
+.nd-btn-violet {
+  background-color: color-mix(in srgb, #8b5cf6 16%, transparent);
+  color: color-mix(in srgb, #8b5cf6 55%, var(--nd-text, #e6edf3) 45%);
+}
+.nd-btn-violet:hover { background-color: color-mix(in srgb, #8b5cf6 28%, transparent); }
+
+.nd-btn-amber {
+  border: 1px solid color-mix(in srgb, #f59e0b 28%, transparent);
+  background-color: color-mix(in srgb, #f59e0b 7%, transparent);
+  color: color-mix(in srgb, #f59e0b 55%, var(--nd-text, #e6edf3) 45%);
+}
+.nd-btn-amber:hover { background-color: color-mix(in srgb, #f59e0b 16%, transparent); }
+
+.nd-empty {
+  border: 1px solid color-mix(in srgb, var(--nd-text, #e6edf3) 12%, transparent);
+  color: var(--nd-text-faint, #64748b);
+}
+
+.nd-hover-row:hover {
+  background-color: color-mix(in srgb, var(--nd-text, #e6edf3) 5%, transparent);
+}
+
+.nd-chip {
+  border: 1px solid color-mix(in srgb, var(--nd-text, #e6edf3) 14%, transparent);
+  background-color: color-mix(in srgb, var(--nd-text, #e6edf3) 4%, transparent);
+  color: var(--nd-text, #e6edf3);
+}
+.nd-chip:hover {
+  border-color: color-mix(in srgb, var(--nd-accent, #22d3ee) 50%, transparent);
+  background-color: color-mix(in srgb, var(--nd-accent, #22d3ee) 12%, transparent);
+  color: color-mix(in srgb, var(--nd-accent, #22d3ee) 65%, var(--nd-text, #e6edf3) 35%);
+}
+
+.nd-edit-card {
+  border: 1px solid color-mix(in srgb, var(--nd-accent, #22d3ee) 25%, transparent);
+  background-color: color-mix(in srgb, var(--nd-text, #e6edf3) 5%, transparent);
+}
+
+.nd-ghost {
+  border: 1px solid color-mix(in srgb, var(--nd-accent, #22d3ee) 55%, transparent);
+  background-color: var(--nd-panel, #10151d);
+  color: var(--nd-text, #e6edf3);
+}
+
+.nd-swatch-violet { background-color: color-mix(in srgb, #8b5cf6 45%, transparent); }
+
+.nd-danger { color: color-mix(in srgb, #f43f5e 65%, var(--nd-text, #e6edf3) 35%); }
+.nd-danger:hover { color: color-mix(in srgb, #f43f5e 90%, var(--nd-text, #e6edf3) 10%); }
+
+.nexus-dashboard-root input[type="checkbox"] {
+  accent-color: var(--nd-accent, #22d3ee);
+}
+
+/* ===== Универсальный фикс для всех выпадающих меню и порталов ===== */
+.nd-context-menu {
+  background-color: var(--nd-panel, #1e1e1e) !important;
+  color: var(--nd-text, #e6edf3) !important;
+  border: 1px solid var(--nd-panel-border, rgba(255,255,255,0.1)) !important;
+}
+
+body .nexus-dashboard-root > div[class*="glass-panel"] {
+  background-color: var(--nd-panel, rgba(10, 14, 20, 0.94)) !important;
+  border-color: var(--nd-panel-border, rgba(255, 255, 255, 0.07)) !important;
+  box-shadow: var(--nd-glow, 0 0 24px -8px rgba(56, 232, 255, 0.25));
+}
+
+/* ===== Стили для компонентов AddBlockMenu ===== */
+.nd-menu-item { color: var(--nd-text, #e6edf3); }
+
+.nd-menu-option:hover {
+  background-color: color-mix(in srgb, var(--nd-text, #e6edf3) 8%, transparent);
+}
+
+.nd-icon-accent { color: var(--nd-accent, #22d3ee); }
+
+.nd-btn-add-button {
+  background-color: color-mix(in srgb, var(--nd-accent, #22d3ee) 8%, transparent);
+  border-color: color-mix(in srgb, var(--nd-accent, #22d3ee) 30%, transparent);
+  color: var(--nd-accent, #22d3ee);
+}
+
+.nd-btn-add-button:hover {
+  background-color: color-mix(in srgb, var(--nd-accent, #22d3ee) 15%, transparent);
+}
+
+/* ===== AddBlockMenu / контекстное меню главного дашборда ===== */
+
+.nd-portal-menu {
+  background: var(--nd-panel, rgba(10, 14, 20, 0.94)) !important;
+  color: var(--nd-text, #e6edf3) !important;
+  border: var(--nd-border-width, 1px) solid var(--nd-panel-border, rgba(255, 255, 255, 0.07)) !important;
+  border-radius: var(--nd-radius, 12px) !important;
+  box-shadow: var(--nd-shadow, 0 0 24px -8px rgba(56, 232, 255, 0.25)) !important;
+}
+
+.nd-menu-option {
+  color: var(--nd-text, #e6edf3) !important;
+}
+
+.nd-menu-option:hover {
+  background-color: color-mix(in srgb, var(--nd-text, #e6edf3) 8%, transparent) !important;
+}
+
+.nd-menu-label {
+  color: var(--nd-text, #e6edf3) !important;
+}
+
+.nd-icon-accent {
+  color: var(--nd-accent, #22d3ee) !important;
+}
+
+.nd-btn-add-button {
+  background-color: color-mix(in srgb, var(--nd-accent, #22d3ee) 8%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--nd-accent, #22d3ee) 35%, transparent) !important;
+  color: var(--nd-accent, #22d3ee) !important;
+}
+
+.nd-btn-add-button:hover {
+  background-color: color-mix(in srgb, var(--nd-accent, #22d3ee) 16%, transparent) !important;
 }
