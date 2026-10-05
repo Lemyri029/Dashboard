@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 
 export type ThemeId = string;
-export const DEFAULT_THEME: ThemeId = "nexus";
+export const DEFAULT_THEME: ThemeId = "Lemo";
 
 export interface ThemeColors {
   bg: string;
@@ -138,7 +138,7 @@ function mk(
 }
 
 export const THEME_LIST: DashboardTheme[] = [
-  mk("nexus", "Nexus", "Неоновая базовая", ["#05070a", "#22d3ee", "#a855f7", "#e6edf3"], {}),
+  mk("lemo", "Lemo", "Неоновая базовая", ["#05070a", "#22d3ee", "#a855f7", "#e6edf3"], {}),
 
   mk("techno-minimal", "Techno Minimal", "Фиолетовый минимал", ["#08090f", "#7c3aed", "#22d3ee", "#cbd5e1"], {
     bg: "#08090f", bgSoft: "#0d0f18", text: "#d4d8e8", textSecondary: "#a1a6b9",

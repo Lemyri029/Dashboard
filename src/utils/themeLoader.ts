@@ -74,7 +74,7 @@ const TEMPLATE = {
     letterSpacing: "-0.01em",
     gridSize: "32px",
   },
-  css: ".nexus-dashboard-root[data-theme=\"my-theme\"] .glass-panel { transition: transform .15s ease; }\n.nexus-dashboard-root[data-theme=\"my-theme\"] .glass-panel:hover { transform: translateY(-2px); }",
+  css: ".Lemo-root[data-theme=\"my-theme\"] .glass-panel { transition: transform .15s ease; }\n.Lemo-root[data-theme=\"my-theme\"] .glass-panel:hover { transform: translateY(-2px); }",
 };
 
 export async function createThemeTemplate(app: App): Promise<string> {

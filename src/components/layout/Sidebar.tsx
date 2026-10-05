@@ -1,8 +1,6 @@
 import { LayoutDashboard, FolderTree, Settings, Search, Command } from "lucide-react";
 import { useDashboardStore } from "../../store/dashboardStore";
-import logoIcon from "../../assets/logo-icon.png";
-import logoMain from "../../assets/logo-main.png";
-import logoSub from "../../assets/logo-sub.png";
+import logo from "../../assets/logo.png";
 import { ToiletBreakTimer } from "../ToiletBreakTimer";
 import { CalendarWidget } from "../CalendarWidget";
 import { t } from "../../i18n";
@@ -81,45 +79,20 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             />
           </div>
         ) : (
-          <div className="flex w-full items-center gap-4">
-            <img
-              src={logoIcon}
-              alt=""
-              className="shrink-0"
-              style={{
-                height: "118px",
-                width: "auto",
-                objectFit: "contain",
-              }}
-            />
-
-            <div className="flex min-w-0 flex-1 flex-col justify-center gap-2">
-              <img
-                src={logoMain}
-                alt="AVILEX"
-                style={{
-                  height: "46px",
-                  width: "auto",
-                  maxWidth: "100%",
-                  objectFit: "contain",
-                  objectPosition: "left center",
-                }}
-              />
-              <img
-                src={logoSub}
-                alt="Архитектура"
-                style={{
-                  height: "23px",
-                  width: "auto",
-                  maxWidth: "100%",
-                  objectFit: "contain",
-                  objectPosition: "left center",
-                  opacity: 0.9,
-                }}
-              />
-            </div>
-          </div>
-        )}
+  <div className="flex w-full items-center justify-center">
+    <img
+      src={logo}
+      alt="Lemo"
+      style={{
+        maxWidth: "100%",
+        maxHeight: "100%",
+        width: "auto",
+        height: "auto",
+        objectFit: "contain",
+      }}
+    />
+  </div>
+)}
       </div>
       {/* ===== /ЛОГОТИП ===== */}
 

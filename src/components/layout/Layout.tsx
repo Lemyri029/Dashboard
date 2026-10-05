@@ -25,7 +25,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
   return (
     <div
-      className="nexus-dashboard-root relative h-screen w-full overflow-hidden"
+      className="Lemo-root relative h-screen w-full overflow-hidden"
       data-theme={activeTheme.id}
       style={getThemeStyle(theme, customThemes)}
     >

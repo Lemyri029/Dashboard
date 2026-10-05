@@ -81,47 +81,47 @@ export function paletteOverrides(c: PaletteColors): Record<string, string> {
 export const BRIDGE_CSS = `/* ===== Theme bridge ===== */
 
 /* 1) Семантические хуки — повесьте data-nd на корни компонентов */
-.nexus-dashboard-root [data-nd="sidebar"] {
+.Lemo-root [data-nd="sidebar"] {
   background: var(--nd-panel);
   border-color: var(--nd-panel-border);
   color: var(--nd-text);
 }
-.nexus-dashboard-root [data-nd="calendar"] {
+.Lemo-root [data-nd="calendar"] {
   color: var(--nd-text-secondary);
   border-color: var(--nd-panel-border);
 }
 
 /* 2) inline-стили с жёстким циановым акцентом (#22d3ee) */
-.nexus-dashboard-root [style*="background-color: rgb(34, 211, 238)"] {
+.Lemo-root [style*="background-color: rgb(34, 211, 238)"] {
   background-color: var(--nd-accent) !important;
   color: var(--nd-accent-text) !important;
   box-shadow: 0 0 12px var(--nd-glow) !important;
 }
-.nexus-dashboard-root [style*="background-color: rgb(34, 211, 238)"] svg {
+.Lemo-root [style*="background-color: rgb(34, 211, 238)"] svg {
   color: var(--nd-accent-text) !important;
 }
 
 /* 3) inline-стили «белое с прозрачностью» и светлый текст */
-.nexus-dashboard-root [style*="background-color: rgba(255, 255, 255, 0.03)"],
-.nexus-dashboard-root [style*="background-color: rgba(255, 255, 255, 0.04)"],
-.nexus-dashboard-root [style*="background-color: rgba(255, 255, 255, 0.05)"] {
+.Lemo-root [style*="background-color: rgba(255, 255, 255, 0.03)"],
+.Lemo-root [style*="background-color: rgba(255, 255, 255, 0.04)"],
+.Lemo-root [style*="background-color: rgba(255, 255, 255, 0.05)"] {
   background-color: color-mix(in srgb, var(--nd-text) 6%, transparent) !important;
 }
-.nexus-dashboard-root [style*="color: rgb(226, 232, 240)"] {
+.Lemo-root [style*="color: rgb(226, 232, 240)"] {
   color: var(--nd-text) !important;
 }
-.nexus-dashboard-root [style*="solid rgba(255, 255, 255, 0.1)"] {
+.Lemo-root [style*="solid rgba(255, 255, 255, 0.1)"] {
   border-color: var(--nd-panel-border) !important;
 }
 
 /* 4) нативные контролы: date / time / select / option */
-.nexus-dashboard-root input[type="date"],
-.nexus-dashboard-root input[type="time"],
-.nexus-dashboard-root input[type="number"],
-.nexus-dashboard-root select {
+.Lemo-root input[type="date"],
+.Lemo-root input[type="time"],
+.Lemo-root input[type="number"],
+.Lemo-root select {
   color-scheme: inherit;
 }
-.nexus-dashboard-root select option {
+.Lemo-root select option {
   background: var(--nd-bg-soft);
   color: var(--nd-text);
 }

@@ -41,7 +41,7 @@ export type DashboardBackupData = {
 };
 
 export type DashboardBackupFile = {
-  app: "nexus-dashboard";
+  app: "Lemo";
   version: number;
   createdAt: string;
   data: DashboardBackupData;
@@ -55,13 +55,13 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function makeDashboardBackupFileName(): string {
   const stamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, "-");
-  return "nexus-dashboard-backup-" + stamp + ".json";
+  return "Lemo-backup-" + stamp + ".json";
 }
 
 function parseDashboardBackup(input: unknown): DashboardBackupData | null {
   if (!isRecord(input)) return null;
 
-  const maybeData = input.app === "nexus-dashboard" ? input.data : input;
+  const maybeData = input.app === "Lemo" ? input.data : input;
 
   if (!isRecord(maybeData)) return null;
   if (!Array.isArray(maybeData.blocks)) return null;
@@ -192,10 +192,9 @@ export const useDashboardStore = create<DashboardState>()(
   persist(
     (set, get) => ({
       app: null,
-      setApp: (app) => {
-        set({ app });
-        void get().reloadThemes();
-      },
+setApp: (app) => {
+  set({ app });
+},
 
       language: DEFAULT_LANGUAGE,
       setLanguage: (language) => set({ language }),
@@ -352,7 +351,7 @@ export const useDashboardStore = create<DashboardState>()(
       exportBackup: () => {
         const state = get();
         return {
-          app: "nexus-dashboard",
+          app: "Lemo",
           version: DASHBOARD_BACKUP_VERSION,
           createdAt: new Date().toISOString(),
           data: {
@@ -739,7 +738,7 @@ export const useDashboardStore = create<DashboardState>()(
       },
     }),
     {
-      name: "nexus-dashboard-store",
+      name: "Lemo-store",
       storage: createJSONStorage(() => obsidianStorage),
       skipHydration: true,
       partialize: (s) => ({

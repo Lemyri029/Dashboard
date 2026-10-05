@@ -3,37 +3,38 @@ import { DashboardView, VIEW_TYPE_DASHBOARD } from "./DashboardView";
 import { setPluginRef } from "./adapters/persistAdapter";
 import { useDashboardStore } from "./store/dashboardStore";  // ← ЭТУ СТРОКУ НУЖНО ДОБАВИТЬ
 
-export default class NexusDashboardPlugin extends Plugin {
+export default class LemoPlugin extends Plugin {
   async onload() {
-    // 1. Сначала передаём ссылку на плагин
-    setPluginRef(this);
+  // 1. Сначала передаём ссылку на плагин
+  setPluginRef(this);
 
-    // 2. Вручную загружаем сохранённое состояние из data.json
-    await (useDashboardStore as any).persist.rehydrate();
+  // 2. Загружаем сохранённое состояние
+  await (useDashboardStore as any).persist.rehydrate();
 
-    // 3. Только потом передаём app в стор
-    useDashboardStore.getState().setApp(this.app);
+  // 3. Передаём app в store
+  const state = useDashboardStore.getState();
+  state.setApp(this.app);
 
-    console.log(
-      "[Matreshka] Hydrated background:",
-      useDashboardStore.getState().background
-    );
+  // 4. ВАЖНО: дожидаемся загрузки кастомных тем ДО открытия дашборда
+  await state.reloadThemes();
 
-    this.registerView(
-      VIEW_TYPE_DASHBOARD,
-      (leaf) => new DashboardView(leaf)
-    );
+  console.log("[Lemo] Hydrated background:", state.background);
 
-    this.addRibbonIcon("layout-dashboard", "Открыть Matreshka", () => {
-      this.activateView();
-    });
+  this.registerView(
+    VIEW_TYPE_DASHBOARD,
+    (leaf) => new DashboardView(leaf)
+  );
 
-    this.addCommand({
-      id: "open-nexus-dashboard",
-      name: "Открыть дашборд",
-      callback: () => this.activateView(),
-    });
-  }
+  this.addRibbonIcon("layout-dashboard", "Открыть Lemo", () => {
+    this.activateView();
+  });
+
+  this.addCommand({
+    id: "open-lemo",
+    name: "Открыть дашборд",
+    callback: () => this.activateView(),
+  });
+}
 
   async activateView() {
     const { workspace } = this.app;

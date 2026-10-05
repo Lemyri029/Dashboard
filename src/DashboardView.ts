@@ -4,7 +4,7 @@ import { createElement } from "react";
 import App from "./App";
 import { useDashboardStore } from "./store/dashboardStore";
 
-export const VIEW_TYPE_DASHBOARD = "nexus-dashboard-view";
+export const VIEW_TYPE_DASHBOARD = "Lemo-view";
 
 export class DashboardView extends ItemView {
   root: Root | null = null;
@@ -18,7 +18,7 @@ export class DashboardView extends ItemView {
   }
 
   getDisplayText() {
-    return "Matreshka";
+    return "Lemo";
   }
 
   getIcon() {
@@ -26,21 +26,27 @@ export class DashboardView extends ItemView {
   }
 
   async onOpen() {
-    // Передаём в стор ссылку на app и сразу строим дерево файлов
-    useDashboardStore.getState().setApp(this.app);
-    useDashboardStore.getState().refreshVault();
+  const state = useDashboardStore.getState();
+  const contentEl = this.containerEl.children[1] as HTMLElement;
 
-    // Подписка на изменения файлов — дерево будет обновляться само
-    this.registerEvent(this.app.vault.on("create", () => useDashboardStore.getState().refreshVault()));
-    this.registerEvent(this.app.vault.on("delete", () => useDashboardStore.getState().refreshVault()));
-    this.registerEvent(this.app.vault.on("rename", () => useDashboardStore.getState().refreshVault()));
+  this.containerEl.addClass("Lemo-root");
 
-    this.root = createRoot(this.containerEl.children[1]);
-    this.containerEl.addClass("nexus-dashboard-root");
-    this.root.render(createElement(App));
-  }
+  // Скрываем контейнер до первого render, чтобы не было заметного перехода
+  contentEl.style.opacity = "0";
 
-  async onClose() {
-    this.root?.unmount();
-  }
+  state.refreshVault();
+
+  // Подписка на изменения файлов — дерево будет обновляться само
+  this.registerEvent(this.app.vault.on("create", () => useDashboardStore.getState().refreshVault()));
+  this.registerEvent(this.app.vault.on("delete", () => useDashboardStore.getState().refreshVault()));
+  this.registerEvent(this.app.vault.on("rename", () => useDashboardStore.getState().refreshVault()));
+
+  this.root = createRoot(contentEl);
+  this.root.render(createElement(App));
+
+  requestAnimationFrame(() => {
+    contentEl.style.transition = "opacity 120ms ease";
+    contentEl.style.opacity = "1";
+  });
+}
 }

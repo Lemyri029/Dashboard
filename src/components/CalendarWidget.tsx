@@ -50,7 +50,7 @@ type CalendarEvent = {
   repeat?: RepeatRule;
 };
 
-const STORAGE_KEY = "avilex-calendar-events";
+const STORAGE_KEY = "calendar-events";
 
 function loadEvents(): CalendarEvent[] {
   try {

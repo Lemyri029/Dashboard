@@ -114,7 +114,7 @@ body {
   word-break: break-word;
 }
 
-.nexus-dashboard-root {
+.Lemo-root {
   font-size: 14px;
   background-color: var(--nd-bg, #05070a);
   color: var(--nd-text, #e6edf3);
@@ -225,11 +225,11 @@ body {
 .miro-resize-e { right: -6px; top: 50%; transform: translateY(-50%); cursor: ew-resize; }
 
 /* ===== Nexus Theme Engine ===== */
-.nexus-dashboard-root .font-mono-techno {
+.Lemo-root .font-mono-techno {
   font-family: var(--nd-font-mono, "JetBrains Mono", ui-monospace, monospace);
 }
 
-.nexus-dashboard-root .glass-panel {
+.Lemo-root .glass-panel {
   background: var(--nd-panel, rgba(10, 14, 20, 0.94)) !important;
   border: var(--nd-border-width, 1px) solid var(--nd-panel-border, rgba(255, 255, 255, 0.07)) !important;
   border-radius: var(--nd-radius, 12px) !important;
@@ -237,33 +237,33 @@ body {
   box-shadow: var(--nd-shadow, 0 0 24px -8px rgba(56, 232, 255, 0.25)) !important;
 }
 
-.nexus-dashboard-root .glow-border {
+.Lemo-root .glow-border {
   box-shadow: 0 0 24px -8px var(--nd-glow, rgba(56, 232, 255, 0.25)) !important;
 }
 
-.nexus-dashboard-root .techno-grid {
+.Lemo-root .techno-grid {
   background-image:
     linear-gradient(to right, var(--nd-grid, rgba(56, 232, 255, 0.06)) 1px, transparent 1px),
     linear-gradient(to bottom, var(--nd-grid, rgba(56, 232, 255, 0.06)) 1px, transparent 1px) !important;
   background-size: var(--nd-grid-size, 32px) var(--nd-grid-size, 32px) !important;
 }
 
-.nexus-dashboard-root .techno-radial {
+.Lemo-root .techno-radial {
   background:
     radial-gradient(ellipse 80% 60% at 50% -10%, var(--nd-radial-1, rgba(45, 212, 255, 0.15)), transparent),
     radial-gradient(ellipse 60% 50% at 100% 100%, var(--nd-radial-2, rgba(168, 85, 247, 0.12)), transparent) !important;
 }
 
-.nexus-dashboard-root .miro-port {
+.Lemo-root .miro-port {
   background: var(--nd-miro-port, #38e8ff) !important;
   border-color: var(--nd-bg, #070a0f) !important;
   box-shadow: 0 0 0 1.5px var(--nd-glow, rgba(56, 232, 255, 0.6)), 0 2px 8px rgba(0, 0, 0, 0.5) !important;
 }
 
-.nexus-dashboard-root *::-webkit-scrollbar-thumb {
+.Lemo-root *::-webkit-scrollbar-thumb {
   background: var(--nd-scrollbar, rgba(56, 232, 255, 0.2));
 }
-.nexus-dashboard-root *::-webkit-scrollbar-thumb:hover {
+.Lemo-root *::-webkit-scrollbar-thumb:hover {
   background: var(--nd-accent, rgba(56, 232, 255, 0.4));
 }
 /* ===== Тема-адаптивные строки (файлы / папки) =====
@@ -386,7 +386,7 @@ body {
 .nd-danger { color: color-mix(in srgb, #f43f5e 65%, var(--nd-text, #e6edf3) 35%); }
 .nd-danger:hover { color: color-mix(in srgb, #f43f5e 90%, var(--nd-text, #e6edf3) 10%); }
 
-.nexus-dashboard-root input[type="checkbox"] {
+.Lemo-root input[type="checkbox"] {
   accent-color: var(--nd-accent, #22d3ee);
 }
 
@@ -397,7 +397,7 @@ body {
   border: 1px solid var(--nd-panel-border, rgba(255,255,255,0.1)) !important;
 }
 
-body .nexus-dashboard-root > div[class*="glass-panel"] {
+body .Lemo-root > div[class*="glass-panel"] {
   background-color: var(--nd-panel, rgba(10, 14, 20, 0.94)) !important;
   border-color: var(--nd-panel-border, rgba(255, 255, 255, 0.07)) !important;
   box-shadow: var(--nd-glow, 0 0 24px -8px rgba(56, 232, 255, 0.25));
@@ -456,4 +456,18 @@ body .nexus-dashboard-root > div[class*="glass-panel"] {
 
 .nd-btn-add-button:hover {
   background-color: color-mix(in srgb, var(--nd-accent, #22d3ee) 16%, transparent) !important;
+}
+
+/* ===== Плавное появление дашборда (скрывает вспышку темы по умолчанию) ===== */
+.Lemo-root .view-content {
+  animation: lemo-fadein 0.3s ease-out both;
+}
+
+@keyframes lemo-fadein {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
