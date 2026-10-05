@@ -1,0 +1,575 @@
+export type LanguageId = "ru" | "en";
+
+export const LANGUAGES: { id: LanguageId; label: string }[] = [
+  { id: "ru", label: "Русский" },
+  { id: "en", label: "English" },
+];
+
+export const DEFAULT_LANGUAGE: LanguageId = "ru";
+
+const ru: Record<string, string> = {
+  // Языки
+  "language.ru": "Русский",
+  "language.en": "English",
+
+  // Боковая панель (Sidebar)
+  "sidebar.dashboard": "Дашборд",
+  "sidebar.files": "Файлы vault",
+  "sidebar.settings": "Настройки",
+  "sidebar.search": "Быстрый поиск...",
+
+  // Таймер (ToiletBreakTimer)
+  "timer.opened": "Открыто",
+
+    // Календарь (Calendar)
+  "calendar.upcoming": "Ближайшие события",
+  "calendar.pickDateHint": "Выберите день и нажмите «+»",
+  "calendar.mon": "Пн",
+  "calendar.tue": "Вт",
+  "calendar.wed": "Ср",
+  "calendar.thu": "Чт",
+  "calendar.fri": "Пт",
+  "calendar.sat": "Сб",
+  "calendar.sun": "Вс",
+  "calendar.createEventTitle": "Создать событие — {date}",
+  "calendar.newEvent": "Новое событие",
+  "calendar.titleLabel": "Название",
+  "calendar.titlePlaceholder": "Например, встреча с клиентом",
+  "calendar.timeLabel": "Время (необязательно)",
+  "calendar.repeat": "Повтор",
+  "calendar.repeat.none": "Не повторять",
+  "calendar.repeat.daily": "Каждый день",
+  "calendar.repeat.dailyMany": "Каждые {n} дн.",
+  "calendar.repeat.weekly": "Каждую неделю",
+  "calendar.repeat.weeklyMany": "Каждые {n} нед.",
+  "calendar.repeat.monthly": "Каждый месяц",
+  "calendar.repeat.monthlyMany": "Каждые {n} мес.",
+  "calendar.repeat.yearly": "Каждый год",
+  "calendar.repeat.yearlyMany": "Каждые {n} г.",
+  "calendar.intervalPrefix": "Интервал — каждые",
+  "calendar.unit.day": "дн.",
+  "calendar.unit.week": "нед.",
+  "calendar.unit.month": "мес.",
+  "calendar.unit.year": "г.",
+  "calendar.repeatUntil": "Повторять до (необязательно)",
+  "calendar.cancel": "Отмена",
+  "calendar.save": "Сохранить",
+  "calendar.delete": "Удалить",
+  "calendar.deleteSeries": "Удалить всю серию",
+
+  // Пустой дашборд
+  "dashboard.empty.title": "Дашборд пуст",
+  "dashboard.empty.subtitle": "Нажмите правой кнопкой мыши на свободном месте, чтобы добавить блок.",
+  
+  // Общее и Настройки
+  "settings.title": "Настройки",
+  "settings.vaultRefreshSuccess": "Дерево файлов синхронизировано",
+
+  "settings.language.title": "Язык интерфейса",
+  "settings.language.description":
+    "Выберите язык для интерфейса плагина. Изменение применяется сразу.",
+
+  "settings.vault.title": "Vault",
+  "settings.vault.description":
+    "Дашборд напрямую использует файлы текущего хранилища Obsidian. Сейчас в дереве {count} элементов верхнего уровня.",
+  "settings.vault.refresh": "Обновить дерево файлов",
+  "settings.vault.obsidianError": "Obsidian не подключён",
+
+  "settings.logo.title": "Логотип дашборда",
+  "settings.logo.description":
+    "Заменяет логотип в левой панели. Изображение автоматически масштабируется под доступное пространство.",
+  "settings.logo.upload": "Загрузить логотип",
+  "settings.logo.reset": "Сбросить",
+  "settings.logo.defaultLogo": "Используется стандартный логотип",
+  "settings.logo.alt": "Текущий логотип",
+  "settings.logo.requirements": "Требования к изображению:",
+  "settings.logo.formats": "Форматы: PNG, JPG, SVG, WEBP",
+  "settings.logo.size": "Рекомендуемый размер: ~500 × 190 px (горизонтальный)",
+  "settings.logo.maxSize": "Максимальный вес файла: 1 МБ",
+  "settings.logo.transparency": "Лучше использовать PNG с прозрачным фоном",
+  "settings.logo.unsupportedFormat": "Неподдерживаемый формат",
+  "settings.logo.unsupportedFormatDesc": "Разрешены PNG, JPG, SVG или WEBP",
+  "settings.logo.tooLarge": "Файл слишком большой",
+  "settings.logo.tooLargeDesc": "Максимальный размер — 1 МБ",
+  "settings.logo.uploadFailed": "Не удалось загрузить логотип",
+  "settings.logo.resetToastTitle": "Логотип сброшен",
+  "settings.logo.resetToastMessage": "Возвращён стандартный логотип",
+
+  "settings.background.title": "Фон дашборда",
+  "settings.background.description":
+    "Картинка подкладывается под все панели. Загруженные файлы сохраняются в папку dashboard-assets внутри хранилища.",
+  "settings.background.fromVault": "Из хранилища",
+  "settings.background.fromDisk": "С диска",
+  "settings.background.externalUrl": "Или внешняя ссылка",
+  "settings.background.dim": "Затемнение",
+  "settings.background.blur": "Размытие",
+  "settings.background.reset": "Сбросить фон",
+  "settings.background.source": "Источник: {source}",
+  "settings.background.noSource": "Фон не выбран",
+  "settings.background.obsidianNotConnected": "Obsidian не подключён",
+  "settings.background.setFromVault": "Фон установлен",
+  "settings.background.setFromDisk": "Фон загружен",
+  "settings.background.setFromUrl": "Фон по ссылке установлен",
+  "settings.background.uploadFailed": "Не удалось загрузить фон",
+
+  "settings.theme.title": "Тема оформления",
+  "settings.theme.description":
+    "Тема меняет цвета, скругления, тени и шрифты. Свои темы кладите в папку {folder} в виде .json файлов.",
+  "settings.theme.reload": "Обновить темы",
+  "settings.theme.createTemplate": "Создать шаблон темы",
+  "settings.theme.custom": "Пользовательские ({count})",
+  "settings.theme.empty":
+    "Пока пусто. Нажмите «Создать шаблон темы» или положите свой .json в папку {folder} и нажмите «Обновить темы».",
+  "settings.theme.reloaded": "Темы обновлены. Найдено пользовательских: {count}",
+  "settings.theme.templateCreated": "Шаблон создан",
+  "settings.theme.templateFailed": "Не удалось создать шаблон",
+  "settings.theme.obsidianError": "Obsidian не подключён",
+
+  "settings.backup.title": "Резервная копия дашборда",
+  "settings.backup.description":
+    "Сохраняет всю конфигурацию дашборда в один .json файл: блоки, страницы, фон, тему и логотип. Файл можно перенести на другое устройство и загрузить обратно.",
+  "settings.backup.save": "Сохранить в JSON",
+  "settings.backup.load": "Загрузить из JSON",
+  "settings.backup.includes": "В копию входит:",
+  "settings.backup.blocks": "Блоки верхнего уровня: {count}",
+  "settings.backup.boards": "Страницы (доски): {count}",
+  "settings.backup.settingsInfo": "Настройки фона, темы и логотипа",
+  "settings.backup.warning":
+    "Внимание: файлы хранилища (.md, .flow, .hostly) в JSON не копируются — используйте синхронизацию хранилища Obsidian.",
+  "settings.backup.confirm":
+    "Загрузить дашборд из файла?\n\nТекущие блоки, страницы, фон, тема и логотип будут заменены.",
+
+  "settings.dashboard.title": "Дашборд",
+  "settings.dashboard.reset": "Сбросить дашборд к пустому состоянию",
+  "settings.dashboard.clear": "Очистить блоки",
+  "settings.dashboard.confirm":
+    "Удалить все блоки дашборда? Файлы в vault затронуты не будут.",
+
+  "block.group": "Группа",
+  "block.note": "Заметка",
+  "block.file-list": "Файлы",
+  "block.flowchart": "Доска",
+  "block.link": "Ссылка",
+  "block.graph": "Граф связей",
+  "block.checklist": "Чек-лист",
+  "block.board-list": "Список страниц",
+  "addblock.button": "Блок",
+
+  "store.newNote": "Новая заметка...",
+  "store.untitled": "Без названия",
+  "store.newFlowchart": "Новая схема",
+  "store.blockAdded.title": "Блок добавлен",
+  "store.blockAdded.message": "{type} создан",
+  "store.dashboardReset.title": "Дашборд очищен",
+  "store.dashboardReset.message": "Все блоки удалены",
+  "store.backupCreated": "Бэкап создан",
+  "store.backupCreateFailed": "Не удалось создать бэкап",
+  "store.backupInvalid.title": "Некорректный JSON",
+  "store.backupInvalid.message": "Файл не похож на бэкап Matreshka",
+  "store.backupRestored.title": "Дашборд восстановлен",
+  "store.backupRestored.message": "Блоки, страницы, фон, тема и логотип загружены",
+  "store.backupLoadFailed": "Не удалось загрузить бэкап",
+  "store.deleteError": "Ошибка удаления",
+  "store.obsidianNotConnected": "Приложение Obsidian ещё не подключено",
+  "store.obsidianNotConnectedShort": "Obsidian не подключён",
+  "store.fileNotFound": "Файл не найден",
+  "store.fileDeleted": "Файл удалён",
+  "store.fileDeleteFailed": "Не удалось удалить файл",
+  "store.fileExists": "Файл уже существует",
+  "store.flowchartCreated": "Схема создана",
+  "store.launchError": "Ошибка запуска",
+  "store.unavailable": "Недоступно",
+  "store.launchDesktopOnly":
+    "Запуск программ работает только в десктопной версии Obsidian",
+  "store.launchFailed": "Не удалось запустить",
+  "store.launching": "Запуск: {name}",
+  "store.explorerFailed": "Не удалось открыть проводник",
+  "store.featureUnavailable": "Функция недоступна",
+  "store.explorerDesktopOnly":
+    "Показать файл в проводнике можно только в десктопной версии Obsidian",
+  "store.openedInObsidian": "Открыто в Obsidian",
+
+     // Страница файлов
+  "files.tree": "Дерево vault",
+  "files.title": "Файлы vault",
+  "files.found": "{count} файлов найдено",
+  "files.search": "Поиск файла...",
+  "files.root": "Корень vault",
+  "files.expandAll": "Развернуть всё",
+  "files.collapseAll": "Свернуть всё",
+  "files.noResults": "Ничего не найдено",
+  "files.rightClickHint": "ПКМ — меню",
+
+  "files.filter.all": "Все",
+  "files.filter.markdown": "Markdown",
+  "files.filter.pdf": "PDF",
+  "files.filter.text": "Текст",
+  "files.filter.hostly": "Hostly",
+  "files.filter.flowchart": "Схемы",
+  "files.filter.executable": "Программы",
+
+  // Контекстное меню файла
+  "files.menu.open": "Открыть",
+  "files.menu.launch": "Запустить",
+  "files.menu.reveal": "В проводнике",
+  "files.menu.obsidian": "В Obsidian",
+  "files.menu.delete": "Удалить",
+  "files.deleteConfirm": "Удалить файл «{name}»?\n\nФайл будет перемещён в корзину согласно настройкам Obsidian.",
+
+    "vault.kind.folder": "Папка",
+  "vault.kind.markdown": "Markdown",
+  "vault.kind.text": "Текст",
+  "vault.kind.pdf": "PDF",
+  "vault.kind.flowchart": "Доска",
+  "vault.kind.hostly": "Hostly",
+  "vault.kind.executable": "Программа",
+  "vault.kind.image": "Изображение",
+  "vault.kind.other": "Файл",
+  "vault.size.bytes": "Б",
+  "vault.size.kb": "КБ",
+  "vault.size.mb": "МБ",
+  "vault.size.gb": "ГБ",
+
+    // Блоки и контекстное меню блоков
+  "block.nestedCount": "{count} вложен.",
+  "block.blocksCount": "{count} блок.",
+  "block.menu.attachFile": "Прикрепить файл",
+  "block.menu.attachFolder": "Прикрепить папку",
+  "block.menu.addBoard": "Добавить доску",
+  "block.menu.editNote": "Редактировать заметку",
+  "block.menu.color": "Цвет блока",
+  "block.menu.addChild": "Добавить блок",
+  "block.menu.delete": "Удалить блок",
+  "block.hint.contextMenu": "Нажмите ПКМ для меню блока",
+  "block.hint.expand": "Развернуть блок",
+  "block.hint.collapse": "Свернуть блок",
+  "block.hint.rename": "Двойной клик — переименовать",
+
+    // Содержимое блоков (BlockContents)
+  "content.note.hint": "Ctrl+Enter — сохранить · Esc — отмена",
+  "content.note.cancel": "Отмена",
+  "content.note.save": "Сохранить",
+  "content.note.empty": "_Пycтo. Дважды нажмите ЛКМ здесь, чтобы редактировать._",
+  "content.note.editTitle": "Двойной клик — редактировать заметку",
+  "content.checklist.placeholder": "Новая задача...",
+  "content.fileList.empty": "Нет файлов. Нажмите ПКМ по блоку — прикрепите файл или папку.",
+  "content.link.titlePlaceholder": "Название ссылки",
+  "content.link.empty": "Ссылок пока нет",
+  "content.link.add": "Добавить",
+  "content.link.addTitle": "Добавить ссылку",
+  "content.link.open": "Открыть",
+  "content.link.edit": "Изменить",
+  "content.link.copy": "Скопировать адрес",
+  "content.link.delete": "Удалить",
+  "content.boardList.empty": "Список пуст",
+  "content.boardList.placeholder": "Новый пункт списка...",
+  "content.flowchart.empty": "Нет досок. Создайте новую ниже или нажмите ПКМ по блоку — Добавить доску.",
+  "content.flowchart.newDefault": "Новая доска",
+  "content.flowchart.placeholder": "Имя новой доски...",
+  "content.flowchart.create": "Создать",
+  "content.hostly.notFound": "Файл не найден",
+  "content.hostly.open": "Открыть редактор Hostly",
+
+    "files.menu.remove": "Убрать из блока",
+  "files.title.launch": "Запустить {name}",
+  "files.title.open": "Открыть {name}",
+
+    // Строка папки в блоке «Файлы»
+  "folder.openInExplorer": "Открыть в проводнике",
+  "folder.openTitle": "Открыть в проводнике: {path}",
+};
+
+const en: Record<string, string> = {
+  // Languages
+  "language.ru": "Русский",
+  "language.en": "English",
+
+  // Sidebar
+  "sidebar.dashboard": "Dashboard",
+  "sidebar.files": "Vault Files",
+  "sidebar.settings": "Settings",
+  "sidebar.search": "Quick search...",
+
+  // Timer (ToiletBreakTimer)
+  "timer.opened": "Opened",
+
+    // Calendar
+  "calendar.upcoming": "Upcoming events",
+  "calendar.pickDateHint": "Pick a day and press “+”",
+  "calendar.mon": "Mo",
+  "calendar.tue": "Tu",
+  "calendar.wed": "We",
+  "calendar.thu": "Th",
+  "calendar.fri": "Fr",
+  "calendar.sat": "Sa",
+  "calendar.sun": "Su",
+  "calendar.createEventTitle": "Create event — {date}",
+  "calendar.newEvent": "New event",
+  "calendar.titleLabel": "Title",
+  "calendar.titlePlaceholder": "e.g. client meeting",
+  "calendar.timeLabel": "Time (optional)",
+  "calendar.repeat": "Repeat",
+  "calendar.repeat.none": "Does not repeat",
+  "calendar.repeat.daily": "Every day",
+  "calendar.repeat.dailyMany": "Every {n} day(s)",
+  "calendar.repeat.weekly": "Every week",
+  "calendar.repeat.weeklyMany": "Every {n} week(s)",
+  "calendar.repeat.monthly": "Every month",
+  "calendar.repeat.monthlyMany": "Every {n} month(s)",
+  "calendar.repeat.yearly": "Every year",
+  "calendar.repeat.yearlyMany": "Every {n} year(s)",
+  "calendar.intervalPrefix": "Interval — every",
+  "calendar.unit.day": "day(s)",
+  "calendar.unit.week": "week(s)",
+  "calendar.unit.month": "month(s)",
+  "calendar.unit.year": "year(s)",
+  "calendar.repeatUntil": "Repeat until (optional)",
+  "calendar.cancel": "Cancel",
+  "calendar.save": "Save",
+  "calendar.delete": "Delete",
+  "calendar.deleteSeries": "Delete entire series",
+
+  // Empty Dashboard
+  "dashboard.empty.title": "Dashboard is empty",
+  "dashboard.empty.subtitle": "Right-click on an empty space to add a block.",
+
+  // Common & Settings
+  "settings.title": "Settings",
+  "settings.vaultRefreshSuccess": "File tree synchronized",
+
+  "settings.language.title": "Interface Language",
+  "settings.language.description":
+    "Select the language for the plugin interface. Changes are applied immediately.",
+
+  "settings.vault.title": "Vault",
+  "settings.vault.description":
+    "The dashboard directly uses files from the current Obsidian vault. Currently there are {count} top-level items in the tree.",
+  "settings.vault.refresh": "Refresh file tree",
+  "settings.vault.obsidianError": "Obsidian not connected",
+
+  "settings.logo.title": "Dashboard Logo",
+  "settings.logo.description":
+    "Replaces the logo in the left panel. The image is automatically scaled to fit the available space.",
+  "settings.logo.upload": "Upload logo",
+  "settings.logo.reset": "Reset",
+  "settings.logo.defaultLogo": "Using default logo",
+  "settings.logo.alt": "Current logo",
+  "settings.logo.requirements": "Image requirements:",
+  "settings.logo.formats": "Formats: PNG, JPG, SVG, WEBP",
+  "settings.logo.size": "Recommended size: ~500 × 190 px (horizontal)",
+  "settings.logo.maxSize": "Maximum file size: 1 MB",
+  "settings.logo.transparency": "PNG with transparent background is recommended",
+  "settings.logo.unsupportedFormat": "Unsupported format",
+  "settings.logo.unsupportedFormatDesc": "Allowed: PNG, JPG, SVG or WEBP",
+  "settings.logo.tooLarge": "File too large",
+  "settings.logo.tooLargeDesc": "Maximum size is 1 MB",
+  "settings.logo.uploadFailed": "Failed to upload logo",
+  "settings.logo.resetToastTitle": "Logo reset",
+  "settings.logo.resetToastMessage": "Default logo restored",
+
+  "settings.background.title": "Dashboard Background",
+  "settings.background.description":
+    "The image is placed under all panels. Uploaded files are saved in the dashboard-assets folder inside the vault.",
+  "settings.background.fromVault": "From vault",
+  "settings.background.fromDisk": "From disk",
+  "settings.background.externalUrl": "Or external URL",
+  "settings.background.dim": "Dim",
+  "settings.background.blur": "Blur",
+  "settings.background.reset": "Reset background",
+  "settings.background.source": "Source: {source}",
+  "settings.background.noSource": "No background selected",
+  "settings.background.obsidianNotConnected": "Obsidian not connected",
+  "settings.background.setFromVault": "Background set",
+  "settings.background.setFromDisk": "Background uploaded",
+  "settings.background.setFromUrl": "Background set from URL",
+  "settings.background.uploadFailed": "Failed to upload background",
+
+  "settings.theme.title": "Theme",
+  "settings.theme.description":
+    "The theme changes colors, rounding, shadows, and fonts. Place your custom themes in the {folder} folder as .json files.",
+  "settings.theme.reload": "Reload themes",
+  "settings.theme.createTemplate": "Create theme template",
+  "settings.theme.custom": "Custom ({count})",
+  "settings.theme.empty":
+    'Empty. Click "Create theme template" or place your .json in the {folder} folder and click "Reload themes".',
+  "settings.theme.reloaded": "Themes reloaded. Found custom: {count}",
+  "settings.theme.templateCreated": "Template created",
+  "settings.theme.templateFailed": "Failed to create template",
+  "settings.theme.obsidianError": "Obsidian not connected",
+
+  "settings.backup.title": "Dashboard Backup",
+  "settings.backup.description":
+    "Saves the entire dashboard configuration to a single .json file: blocks, pages, background, theme, and logo. The file can be transferred to another device and loaded back.",
+  "settings.backup.save": "Save to JSON",
+  "settings.backup.load": "Load from JSON",
+  "settings.backup.includes": "Backup includes:",
+  "settings.backup.blocks": "Top-level blocks: {count}",
+  "settings.backup.boards": "Pages (boards): {count}",
+  "settings.backup.settingsInfo": "Background, theme, and logo settings",
+  "settings.backup.warning":
+    "Note: vault files (.md, .flow, .hostly) are not included in the JSON — use Obsidian vault synchronization.",
+  "settings.backup.confirm":
+    "Load dashboard from file?\n\nCurrent blocks, pages, background, theme, and logo will be replaced.",
+
+  "settings.dashboard.title": "Dashboard",
+  "settings.dashboard.reset": "Reset dashboard to empty state",
+  "settings.dashboard.clear": "Clear blocks",
+  "settings.dashboard.confirm":
+    "Delete all dashboard blocks? Vault files will not be affected.",
+
+  "block.group": "Group",
+  "block.note": "Note",
+  "block.file-list": "Files",
+  "block.flowchart": "Board",
+  "block.link": "Link",
+  "block.graph": "Graph",
+  "block.checklist": "Checklist",
+  "block.board-list": "Page List",
+  "addblock.button": "Block",
+
+  "store.newNote": "New note...",
+  "store.untitled": "Untitled",
+  "store.newFlowchart": "New diagram",
+  "store.blockAdded.title": "Block added",
+  "store.blockAdded.message": "{type} created",
+  "store.dashboardReset.title": "Dashboard cleared",
+  "store.dashboardReset.message": "All blocks removed",
+  "store.backupCreated": "Backup created",
+  "store.backupCreateFailed": "Failed to create backup",
+  "store.backupInvalid.title": "Invalid JSON",
+  "store.backupInvalid.message": "The file does not look like a Matreshka backup",
+  "store.backupRestored.title": "Dashboard restored",
+  "store.backupRestored.message": "Blocks, pages, background, theme and logo loaded",
+  "store.backupLoadFailed": "Failed to load backup",
+  "store.deleteError": "Delete error",
+  "store.obsidianNotConnected": "Obsidian app is not connected yet",
+  "store.obsidianNotConnectedShort": "Obsidian not connected",
+  "store.fileNotFound": "File not found",
+  "store.fileDeleted": "File deleted",
+  "store.fileDeleteFailed": "Failed to delete file",
+  "store.fileExists": "File already exists",
+  "store.flowchartCreated": "Diagram created",
+  "store.launchError": "Launch error",
+  "store.unavailable": "Unavailable",
+  "store.launchDesktopOnly":
+    "Launching programs works only in the desktop version of Obsidian",
+  "store.launchFailed": "Failed to launch",
+  "store.launching": "Launching: {name}",
+  "store.explorerFailed": "Failed to open file explorer",
+  "store.featureUnavailable": "Feature unavailable",
+  "store.explorerDesktopOnly":
+    "Showing a file in the explorer works only in the desktop version of Obsidian",
+  "store.openedInObsidian": "Opened in Obsidian",
+
+      // Files page
+  "files.tree": "Vault tree",
+  "files.title": "Vault Files",
+  "files.found": "{count} files found",
+  "files.search": "Search files...",
+  "files.root": "Vault root",
+  "files.expandAll": "Expand all",
+  "files.collapseAll": "Collapse all",
+  "files.noResults": "Nothing found",
+  "files.rightClickHint": "Right-click — menu",
+
+  "files.filter.all": "All",
+  "files.filter.markdown": "Markdown",
+  "files.filter.pdf": "PDF",
+  "files.filter.text": "Text",
+  "files.filter.hostly": "Hostly",
+  "files.filter.flowchart": "Diagrams",
+  "files.filter.executable": "Programs",
+
+  // File context menu
+  "files.menu.open": "Open",
+  "files.menu.launch": "Launch",
+  "files.menu.reveal": "Show in Explorer",
+  "files.menu.obsidian": "In Obsidian",
+  "files.menu.delete": "Delete",
+  "files.deleteConfirm": "Delete file “{name}”?\n\nThe file will be moved to trash according to Obsidian settings.",
+  
+  "vault.kind.folder": "Folder",
+  "vault.kind.markdown": "Markdown",
+  "vault.kind.text": "Text",
+  "vault.kind.pdf": "PDF",
+  "vault.kind.flowchart": "Board",
+  "vault.kind.hostly": "Hostly",
+  "vault.kind.executable": "Program",
+  "vault.kind.image": "Image",
+  "vault.kind.other": "File",
+  "vault.size.bytes": "B",
+  "vault.size.kb": "KB",
+  "vault.size.mb": "MB",
+  "vault.size.gb": "GB",
+
+    // Blocks and block context menu
+  "block.nestedCount": "{count} nested",
+  "block.blocksCount": "{count} block(s)",
+  "block.menu.attachFile": "Attach file",
+  "block.menu.attachFolder": "Attach folder",
+  "block.menu.addBoard": "Add board",
+  "block.menu.editNote": "Edit note",
+  "block.menu.color": "Block color",
+  "block.menu.addChild": "Add block",
+  "block.menu.delete": "Delete block",
+  "block.hint.contextMenu": "Right-click for block menu",
+  "block.hint.expand": "Expand block",
+  "block.hint.collapse": "Collapse block",
+  "block.hint.rename": "Double-click to rename",
+
+    // Block Contents
+  "content.note.hint": "Ctrl+Enter to save · Esc to cancel",
+  "content.note.cancel": "Cancel",
+  "content.note.save": "Save",
+  "content.note.empty": "_Empty. Double click here to edit._",
+  "content.note.editTitle": "Double click — edit note",
+  "content.checklist.placeholder": "New task...",
+  "content.fileList.empty": "No files. Right-click block to attach file or folder.",
+  "content.link.titlePlaceholder": "Link title",
+  "content.link.empty": "No links yet",
+  "content.link.add": "Add",
+  "content.link.addTitle": "Add link",
+  "content.link.open": "Open",
+  "content.link.edit": "Edit",
+  "content.link.copy": "Copy URL",
+  "content.link.delete": "Delete",
+  "content.boardList.empty": "List is empty",
+  "content.boardList.placeholder": "New list item...",
+  "content.flowchart.empty": "No boards. Create a new one below or right-click block — Add board.",
+  "content.flowchart.newDefault": "New board",
+  "content.flowchart.placeholder": "New board name...",
+  "content.flowchart.create": "Create",
+  "content.hostly.notFound": "File not found",
+  "content.hostly.open": "Open Hostly editor",
+
+    "files.menu.remove": "Remove from block",
+  "files.title.launch": "Launch {name}",
+  "files.title.open": "Open {name}",
+
+    // Folder row in "Files" block
+  "folder.openInExplorer": "Open in Explorer",
+  "folder.openTitle": "Open in Explorer: {path}",
+};
+
+const translations: Record<LanguageId, Record<string, string>> = { ru, en };
+
+export function isLanguageId(value: unknown): value is LanguageId {
+  return value === "ru" || value === "en";
+}
+
+export function t(
+  key: string,
+  lang: LanguageId = DEFAULT_LANGUAGE,
+  params?: Record<string, string | number>
+): string {
+  const table = translations[lang] ?? ru;
+  let text = table[key] ?? ru[key] ?? key;
+
+  if (params) {
+    for (const name of Object.keys(params)) {
+      text = text.split("{" + name + "}").join(String(params[name]));
+    }
+  }
+
+  return text;
+}

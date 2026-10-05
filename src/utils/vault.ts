@@ -1,4 +1,5 @@
 import type { FileKind, VaultFile } from "../types";
+import { DEFAULT_LANGUAGE, t, type LanguageId } from "../i18n";
 
 export function findFile(nodes: VaultFile[], id: string): VaultFile | undefined {
   for (const n of nodes) {
@@ -34,25 +35,49 @@ export function flattenFiles(nodes: VaultFile[]): VaultFile[] {
   return out;
 }
 
-export function formatBytes(bytes?: number): string {
-  if (!bytes && bytes !== 0) return "—";
-  if (bytes === 0) return "0 Б";
-  const units = ["Б", "КБ", "МБ", "ГБ"];
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return `${(bytes / Math.pow(1024, i)).toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+export function formatBytes(
+  bytes?: number,
+  language: LanguageId = DEFAULT_LANGUAGE
+): string {
+  if (bytes === undefined || !Number.isFinite(bytes) || bytes < 0) return "—";
+
+  const units = [
+    "vault.size.bytes",
+    "vault.size.kb",
+    "vault.size.mb",
+    "vault.size.gb",
+  ] as const;
+
+  if (bytes === 0) return `0 ${t(units[0], language)}`;
+
+  const index = Math.min(
+    Math.floor(Math.log(bytes) / Math.log(1024)),
+    units.length - 1
+  );
+
+  const value = (bytes / Math.pow(1024, index)).toFixed(index === 0 ? 0 : 1);
+  return `${value} ${t(units[index] ?? units[0], language)}`;
 }
 
+/** Старый список оставляем: его могут использовать другие файлы. */
 export const KIND_LABEL: Record<FileKind, string> = {
   folder: "Папка",
   markdown: "Markdown",
   text: "Текст",
   pdf: "PDF",
-  hostly: "Hostly",
   flowchart: "Доска",
   executable: "Программа",
   image: "Изображение",
   other: "Файл",
 };
+
+/** Используй эту функцию там, где название должно меняться вместе с языком. */
+export function getKindLabel(kind: FileKind, language: LanguageId): string {
+  const key = `vault.kind.${kind}`;
+  const translated = t(key, language);
+
+  return translated === key ? KIND_LABEL[kind] ?? kind : translated;
+}
 
 const LAUNCHABLE_EXTENSIONS = [
   ".lnk",

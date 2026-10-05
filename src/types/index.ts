@@ -146,3 +146,5 @@ export type AppTheme = {
     radius?: string;
   }
 }
+
+export type LanguageId = "ru" | "en";

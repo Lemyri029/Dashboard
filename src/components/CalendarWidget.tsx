@@ -21,7 +21,7 @@ import {
   getDate,
   getDaysInMonth,
 } from "date-fns";
-import { ru } from "date-fns/locale";
+import { ru as dfRu, enUS as dfEn } from "date-fns/locale";
 import {
   ChevronLeft,
   ChevronRight,
@@ -31,6 +31,8 @@ import {
   Trash2,
   Repeat,
 } from "lucide-react";
+import { useDashboardStore } from "../store/dashboardStore";
+import { t, type LanguageId } from "../i18n";
 
 type RepeatFreq = "none" | "daily" | "weekly" | "monthly" | "yearly";
 
@@ -123,18 +125,26 @@ function eventsForDate(events: CalendarEvent[], date: Date) {
     .sort((a, b) => (a.time ?? "").localeCompare(b.time ?? ""));
 }
 
-function repeatLabel(rep?: RepeatRule): string | null {
+function repeatLabel(rep: RepeatRule | undefined, lang: LanguageId): string | null {
   if (!rep || rep.freq === "none") return null;
   const i = Math.max(1, rep.interval || 1);
   switch (rep.freq) {
     case "daily":
-      return i === 1 ? "Каждый день" : `Каждые ${i} дн.`;
+      return i === 1
+        ? t("calendar.repeat.daily", lang)
+        : t("calendar.repeat.dailyMany", lang, { n: i });
     case "weekly":
-      return i === 1 ? "Каждую неделю" : `Каждые ${i} нед.`;
+      return i === 1
+        ? t("calendar.repeat.weekly", lang)
+        : t("calendar.repeat.weeklyMany", lang, { n: i });
     case "monthly":
-      return i === 1 ? "Каждый месяц" : `Каждые ${i} мес.`;
+      return i === 1
+        ? t("calendar.repeat.monthly", lang)
+        : t("calendar.repeat.monthlyMany", lang, { n: i });
     case "yearly":
-      return i === 1 ? "Каждый год" : `Каждые ${i} г.`;
+      return i === 1
+        ? t("calendar.repeat.yearly", lang)
+        : t("calendar.repeat.yearlyMany", lang, { n: i });
     default:
       return null;
   }
@@ -147,6 +157,9 @@ const inputStyle: React.CSSProperties = {
 };
 
 export function CalendarWidget() {
+  const language = useDashboardStore((s: any) => s.language);
+  const dateLocale = language === "ru" ? dfRu : dfEn;
+
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [events, setEvents] = useState<CalendarEvent[]>(() => loadEvents());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -175,7 +188,15 @@ export function CalendarWidget() {
     d = addDays(d, 1);
   }
 
-  const weekdays = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+  const weekdays = [
+    t("calendar.mon", language),
+    t("calendar.tue", language),
+    t("calendar.wed", language),
+    t("calendar.thu", language),
+    t("calendar.fri", language),
+    t("calendar.sat", language),
+    t("calendar.sun", language),
+  ];
 
   // Ближайшие события на 120 дней вперёд (с учётом повторов)
   const upcoming: { ev: CalendarEvent; date: Date }[] = [];
@@ -233,7 +254,7 @@ export function CalendarWidget() {
           <div className="flex items-center gap-2">
             <Calendar size={16} className="text-cyan-400" />
             <span className="text-sm font-semibold capitalize text-slate-200">
-              {format(currentMonth, "LLLL yyyy", { locale: ru })}
+              {format(currentMonth, "LLLL yyyy", { locale: dateLocale })}
             </span>
           </div>
 
@@ -255,9 +276,9 @@ export function CalendarWidget() {
                 boxShadow: "0 0 8px rgba(34,211,238,0.35)",
                 marginRight: "4px",
               }}
-              title={`Создать событие — ${format(selectedDate, "d MMMM yyyy", {
-                locale: ru,
-              })}`}
+              title={t("calendar.createEventTitle", language, {
+                date: format(selectedDate, "d MMMM yyyy", { locale: dateLocale }),
+              })}
             >
               <Plus size={14} strokeWidth={3} style={{ color: "#000000" }} />
             </button>
@@ -345,7 +366,7 @@ export function CalendarWidget() {
           {selectedEvents.length > 0 ? (
             <>
               <div className="text-[10px] font-semibold uppercase tracking-wider text-cyan-400/80">
-                {format(selectedDate, "d MMMM", { locale: ru })}
+                {format(selectedDate, "d MMMM", { locale: dateLocale })}
               </div>
               <div className="space-y-1.5">
                 {selectedEvents.map((ev) => (
@@ -367,7 +388,7 @@ export function CalendarWidget() {
                         {ev.repeat && (
                           <span className="flex items-center gap-0.5 text-violet-400/80">
                             <Repeat size={9} />
-                            {repeatLabel(ev.repeat)}
+                            {repeatLabel(ev.repeat, language)}
                           </span>
                         )}
                       </div>
@@ -375,7 +396,11 @@ export function CalendarWidget() {
                     <button
                       onClick={() => handleDelete(ev.id)}
                       className="text-slate-500 opacity-0 transition-opacity hover:text-rose-400 group-hover:opacity-100"
-                      title={ev.repeat ? "Удалить всю серию" : "Удалить"}
+                      title={
+                        ev.repeat
+                          ? t("calendar.deleteSeries", language)
+                          : t("calendar.delete", language)
+                      }
                     >
                       <Trash2 size={12} />
                     </button>
@@ -386,12 +411,12 @@ export function CalendarWidget() {
           ) : (
             <>
               <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                Ближайшие события
+                {t("calendar.upcoming", language)}
               </div>
               {upcoming.length === 0 ? (
                 <div className="rounded-lg border border-white/5 bg-white/[0.02] p-2.5">
                   <div className="text-[11px] text-slate-400">
-                    Выберите день и нажмите «+»
+                    {t("calendar.pickDateHint", language)}
                   </div>
                 </div>
               ) : (
@@ -412,7 +437,7 @@ export function CalendarWidget() {
                         </div>
                         <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
                           <span>
-                            {format(date, "d MMM", { locale: ru })}
+                            {format(date, "d MMM", { locale: dateLocale })}
                             {ev.time ? ` · ${ev.time}` : ""}
                           </span>
                           {ev.repeat && (
@@ -423,7 +448,11 @@ export function CalendarWidget() {
                       <button
                         onClick={() => handleDelete(ev.id)}
                         className="text-slate-500 opacity-0 transition-opacity hover:text-rose-400 group-hover:opacity-100"
-                        title={ev.repeat ? "Удалить всю серию" : "Удалить"}
+                        title={
+                          ev.repeat
+                            ? t("calendar.deleteSeries", language)
+                            : t("calendar.delete", language)
+                        }
                       >
                         <Trash2 size={12} />
                       </button>
@@ -449,10 +478,10 @@ export function CalendarWidget() {
             <div className="mb-3 flex items-center justify-between">
               <div>
                 <div className="text-sm font-semibold text-slate-100">
-                  Новое событие
+                  {t("calendar.newEvent", language)}
                 </div>
                 <div className="text-[11px] text-slate-500">
-                  {format(selectedDate, "d MMMM yyyy", { locale: ru })}
+                  {format(selectedDate, "d MMMM yyyy", { locale: dateLocale })}
                 </div>
               </div>
               <button
@@ -466,7 +495,7 @@ export function CalendarWidget() {
             <div className="space-y-3">
               <div>
                 <label className="mb-1 block text-[11px] text-slate-400">
-                  Название
+                  {t("calendar.titleLabel", language)}
                 </label>
                 <input
                   autoFocus
@@ -477,7 +506,7 @@ export function CalendarWidget() {
                     if (e.key === "Enter") handleSave();
                     if (e.key === "Escape") setModalOpen(false);
                   }}
-                  placeholder="Например, встреча с клиентом"
+                  placeholder={t("calendar.titlePlaceholder", language)}
                   style={inputStyle}
                   className="w-full rounded-md px-2.5 py-1.5 text-xs outline-none focus:border-cyan-400/40"
                 />
@@ -485,7 +514,7 @@ export function CalendarWidget() {
 
               <div>
                 <label className="mb-1 block text-[11px] text-slate-400">
-                  Время (необязательно)
+                  {t("calendar.timeLabel", language)}
                 </label>
                 <input
                   type="time"
@@ -499,7 +528,7 @@ export function CalendarWidget() {
               {/* ПОВТОР */}
               <div>
                 <label className="mb-1 flex items-center gap-1.5 text-[11px] text-slate-400">
-                  <Repeat size={11} /> Повтор
+                  <Repeat size={11} /> {t("calendar.repeat", language)}
                 </label>
                 <select
                   value={freq}
@@ -507,11 +536,11 @@ export function CalendarWidget() {
                   style={{ ...inputStyle, backgroundColor: "#161b22" }}
                   className="w-full rounded-md px-2.5 py-1.5 text-xs outline-none focus:border-cyan-400/40"
                 >
-                  <option value="none">Не повторять</option>
-                  <option value="daily">Каждый день</option>
-                  <option value="weekly">Каждую неделю</option>
-                  <option value="monthly">Каждый месяц (то же число)</option>
-                  <option value="yearly">Каждый год</option>
+                  <option value="none">{t("calendar.repeat.none", language)}</option>
+                  <option value="daily">{t("calendar.repeat.daily", language)}</option>
+                  <option value="weekly">{t("calendar.repeat.weekly", language)}</option>
+                  <option value="monthly">{t("calendar.repeat.monthly", language)}</option>
+                  <option value="yearly">{t("calendar.repeat.yearly", language)}</option>
                 </select>
               </div>
 
@@ -519,15 +548,15 @@ export function CalendarWidget() {
                 <>
                   <div>
                     <label className="mb-1 block text-[11px] text-slate-400">
-                      Интервал — каждые{" "}
+                      {t("calendar.intervalPrefix", language)}{" "}
                       <span className="text-cyan-400">{interval}</span>{" "}
                       {freq === "daily"
-                        ? "дн."
+                        ? t("calendar.unit.day", language)
                         : freq === "weekly"
-                        ? "нед."
+                        ? t("calendar.unit.week", language)
                         : freq === "monthly"
-                        ? "мес."
-                        : "г."}
+                        ? t("calendar.unit.month", language)
+                        : t("calendar.unit.year", language)}
                     </label>
                     <input
                       type="number"
@@ -544,7 +573,7 @@ export function CalendarWidget() {
 
                   <div>
                     <label className="mb-1 block text-[11px] text-slate-400">
-                      Повторять до (необязательно)
+                      {t("calendar.repeatUntil", language)}
                     </label>
                     <input
                       type="date"
@@ -563,7 +592,7 @@ export function CalendarWidget() {
                 onClick={() => setModalOpen(false)}
                 className="rounded-md border border-white/10 px-3 py-1.5 text-xs text-slate-300 transition-colors hover:bg-white/5"
               >
-                Отмена
+                {t("calendar.cancel", language)}
               </button>
               <button
                 onClick={handleSave}
@@ -571,7 +600,7 @@ export function CalendarWidget() {
                 style={{ backgroundColor: "#22d3ee", color: "#000000" }}
                 className="rounded-md px-3 py-1.5 text-xs font-semibold transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                Сохранить
+                {t("calendar.save", language)}
               </button>
             </div>
           </div>

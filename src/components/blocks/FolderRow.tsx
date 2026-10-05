@@ -1,6 +1,9 @@
 import { Folder, FolderOpen, X } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { useDashboardStore } from "../../store/dashboardStore";
+import { getKindLabel } from "../../utils/vault";
+import { t } from "../../i18n";
 
 declare global {
   interface Window {
@@ -26,7 +29,7 @@ function openFolderInExplorer(path: string) {
       cp.execFile("explorer.exe", [path]);
     }
   } catch (e) {
-    console.warn("Не удалось открыть папку:", e);
+    console.warn("Failed to open folder:", e);
   }
 }
 
@@ -51,6 +54,8 @@ export function FolderRow({
   onDragEnd,
   isDragOver = false,
 }: FolderRowProps) {
+  const language = useDashboardStore((state) => state.language);
+
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -89,7 +94,7 @@ export function FolderRow({
     setMenuPos({ x, y });
   }
 
-    return (
+  return (
     <div
       draggable={draggable}
       onDragStart={onDragStart}
@@ -97,26 +102,26 @@ export function FolderRow({
       onDrop={onDrop}
       onDragEnd={onDragEnd}
       onContextMenu={handleContextMenu}
-            className={`group nd-row flex items-center gap-2 rounded-md px-2 py-1.5 transition ${
+      className={`group nd-row flex items-center gap-2 rounded-md px-2 py-1.5 transition ${
         isDragOver ? "nd-row--drag" : ""
       } ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`}
     >
-            <Folder size={14} className="nd-row__folder-icon h-3.5 w-3.5 shrink-0" />
+      <Folder size={14} className="nd-row__folder-icon h-3.5 w-3.5 shrink-0" />
 
-            <button
+      <button
         type="button"
         onClick={() => openFolderInExplorer(path)}
         className="min-w-0 flex-1 overflow-hidden text-center"
-        title={`Открыть в проводнике: ${path}`}
+        title={t("folder.openTitle", language, { path })}
       >
-                <p className="nd-row__name block w-full truncate text-center text-xs">
+        <p className="nd-row__name block w-full truncate text-center text-xs">
           {basename(path)}
         </p>
       </button>
 
       <span className="flex w-[72px] shrink-0 flex-col items-end justify-center leading-tight">
-                <span className="nd-row__badge-amber rounded-full px-1.5 py-0.5 text-[9px]">
-          Папка
+        <span className="nd-row__badge-amber rounded-full px-1.5 py-0.5 text-[9px]">
+          {getKindLabel("folder", language)}
         </span>
       </span>
 
@@ -137,7 +142,7 @@ export function FolderRow({
                 className="flex items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-amber-300 hover:bg-amber-400/10"
               >
                 <FolderOpen size={14} />
-                Открыть в проводнике
+                {t("folder.openInExplorer", language)}
               </button>
               {onRemove && (
                 <button
@@ -149,7 +154,7 @@ export function FolderRow({
                   className="flex items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-slate-500 hover:bg-rose-400/10 hover:text-rose-300"
                 >
                   <X size={14} />
-                  Убрать из блока
+                  {t("files.menu.remove", language)}
                 </button>
               )}
             </div>

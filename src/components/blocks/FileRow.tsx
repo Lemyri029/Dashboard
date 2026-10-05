@@ -10,7 +10,8 @@ import { createPortal } from "react-dom";
 import type { VaultFile } from "../../types";
 import { FileIcon } from "../FileIcon";
 import { useDashboardStore } from "../../store/dashboardStore";
-import { formatBytes, KIND_LABEL } from "../../utils/vault";
+import { getKindLabel } from "../../utils/vault";
+import { t } from "../../i18n";
 
 /**
  * Расширения файлов, которые можно запускать
@@ -71,6 +72,7 @@ export function FileRow({
     (state) => state.openInObsidian
   );
   const deleteFile = useDashboardStore((state) => state.deleteFile);
+  const language = useDashboardStore((state) => state.language);
 
   /*
    * Позиция контекстного меню в координатах окна.
@@ -125,14 +127,6 @@ export function FileRow({
       return;
     }
 
-    if (file.kind === "hostly") {
-      navigate({
-        name: "hostly",
-        path: file.path,
-      });
-      return;
-    }
-
     navigate({
       name: "file",
       path: file.path,
@@ -141,8 +135,7 @@ export function FileRow({
 
   async function handleDelete() {
     const confirmed = window.confirm(
-      `Удалить файл «${file.name}»?\n\n` +
-        "Файл будет перемещён в корзину согласно настройкам Obsidian."
+      t("files.deleteConfirm", language, { name: file.name })
     );
 
     if (!confirmed) return;
@@ -185,7 +178,7 @@ export function FileRow({
 
   const closeMenu = () => setMenuPos(null);
 
-   return (
+  return (
     <div
       draggable={draggable}
       onDragStart={onDragStart}
@@ -193,7 +186,7 @@ export function FileRow({
       onDrop={onDrop}
       onDragEnd={onDragEnd}
       onContextMenu={handleContextMenu}
-            className={`group nd-row flex items-center gap-2 rounded-md px-2 py-1.5 transition ${
+      className={`group nd-row flex items-center gap-2 rounded-md px-2 py-1.5 transition ${
         isDragOver ? "nd-row--drag" : ""
       } ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`}
     >
@@ -209,8 +202,8 @@ export function FileRow({
         className="min-w-0 flex-1 overflow-hidden text-center"
         title={
           launchable
-            ? `Запустить ${file.name}`
-            : `Открыть ${file.name}`
+            ? t("files.title.launch", language, { name: file.name })
+            : t("files.title.open", language, { name: file.name })
         }
       >
         <p className="nd-row__name block w-full truncate text-center text-xs">
@@ -218,19 +211,16 @@ export function FileRow({
         </p>
 
         {!hidePath && (
-           <p className="nd-row__faint block w-full truncate text-center font-mono-techno text-[9px]">
+          <p className="nd-row__faint block w-full truncate text-center font-mono-techno text-[9px]">
             {file.path}
           </p>
         )}
       </button>
 
-      {/* Тип и размер друг над другом */}
+      {/* Тип файла */}
       <span className="flex w-[72px] shrink-0 flex-col items-end justify-center leading-tight">
         <span className="nd-row__badge rounded-full px-1.5 py-0.5 text-[9px]">
-          {KIND_LABEL[file.kind]}
-        </span>
-                <span className="nd-row__faint mt-0.5 text-[9px]">
-          {formatBytes(file.size)}
+          {getKindLabel(file.kind, language)}
         </span>
       </span>
 
@@ -257,7 +247,7 @@ export function FileRow({
                   className="flex items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-emerald-300 hover:bg-emerald-400/10"
                 >
                   <PlayCircle size={14} />
-                  Запустить
+                  {t("files.menu.launch", language)}
                 </button>
               ) : (
                 <button
@@ -269,7 +259,7 @@ export function FileRow({
                   className="flex items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-cyan-300 hover:bg-cyan-400/10"
                 >
                   <ExternalLink size={14} />
-                  Открыть
+                  {t("files.menu.open", language)}
                 </button>
               )}
 
@@ -282,7 +272,7 @@ export function FileRow({
                 className="flex items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-slate-400 hover:bg-white/10 hover:text-slate-200"
               >
                 <FolderOpen size={14} />
-                В проводнике
+                {t("files.menu.reveal", language)}
               </button>
 
               {(file.kind === "markdown" || file.kind === "pdf") && (
@@ -301,7 +291,7 @@ export function FileRow({
                       strokeWidth="1.6"
                     />
                   </svg>
-                  В Obsidian
+                  {t("files.menu.obsidian", language)}
                 </button>
               )}
 
@@ -315,7 +305,7 @@ export function FileRow({
                   className="flex items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-rose-400 hover:bg-rose-400/10 hover:text-rose-300"
                 >
                   <Trash2 size={14} />
-                  Удалить
+                  {t("files.menu.delete", language)}
                 </button>
               )}
 
@@ -329,7 +319,7 @@ export function FileRow({
                   className="flex items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-slate-500 hover:bg-rose-400/10 hover:text-rose-300"
                 >
                   <X size={14} />
-                  Убрать из блока
+                  {t("files.menu.remove", language)}
                 </button>
               )}
             </div>

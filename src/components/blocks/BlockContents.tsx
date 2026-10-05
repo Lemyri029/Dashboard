@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Pencil, Eye, Plus, Trash2, ExternalLink, Server, X, Copy } from "lucide-react";
-import type { Block, HostlyDoc, LinkEntry } from "../../types";
+import { Pencil, Eye, Plus, Trash2, ExternalLink, X, Copy } from "lucide-react";
+import type { Block, LinkEntry } from "../../types";
 import { useDashboardStore } from "../../store/dashboardStore";
 import { findFile, flattenFiles } from "../../utils/vault";
 import { MarkdownView } from "../MarkdownView";
 import { FileRow } from "./FileRow";
 import { FolderRow } from "./FolderRow";
 import { v4 as uuid } from "uuid";
-
+import { t } from "../../i18n";
 
 export function NoteContent({
   block,
@@ -17,10 +17,11 @@ export function NoteContent({
   block: Block;
   boardId?: string;
 }) {
+  const language = useDashboardStore((s) => s.language);
   const updateBlockData = useDashboardStore((s) => s.updateBlockData);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(block.data.markdown ?? "");
- 
+
   useEffect(() => {
     const handleOpen = () => {
       setDraft(block.data.markdown ?? "");
@@ -69,28 +70,28 @@ export function NoteContent({
 
         <div className="flex items-center gap-2">
           <span className="mr-auto text-[10px] text-slate-500">
-            Ctrl+Enter — сохранить · Esc — отмена
+            {t("content.note.hint", language)}
           </span>
 
           <button
             onClick={cancel}
             className="rounded-md px-2.5 py-1 text-xs text-slate-400 hover:bg-white/5"
           >
-            Отмена
+            {t("content.note.cancel", language)}
           </button>
 
           <button
             onClick={save}
             className="rounded-md bg-cyan-400/15 px-2.5 py-1 text-xs text-cyan-300 hover:bg-cyan-400/25"
           >
-            Сохранить
+            {t("content.note.save", language)}
           </button>
         </div>
       </div>
     );
   }
 
-      return (
+  return (
     <div
       onDoubleClick={(e) => {
         if (e.button !== 0) return;
@@ -107,12 +108,12 @@ export function NoteContent({
         overscrollBehavior: "contain",
       }}
       className="nodrag nowheel overflow-y-auto pr-2"
-      title="Двойной клик — редактировать заметку"
+      title={t("content.note.editTitle", language)}
     >
       <MarkdownView
         content={
           block.data.markdown ||
-          "_Пycтo. Дважды нажмите ЛКМ здесь, чтобы редактировать._"
+          t("content.note.empty", language)
         }
       />
     </div>
@@ -120,6 +121,7 @@ export function NoteContent({
 }
 
 export function ChecklistContent({ block, boardId }: { block: Block; boardId?: string }) {
+  const language = useDashboardStore((s) => s.language);
   const updateBlockData = useDashboardStore((s) => s.updateBlockData);
   const [text, setText] = useState("");
   const items = block.data.items ?? [];
@@ -165,7 +167,7 @@ export function ChecklistContent({ block, boardId }: { block: Block; boardId?: s
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && add()}
-          placeholder="Новая задача..."
+          placeholder={t("content.checklist.placeholder", language)}
           className="w-full rounded-md border border-white/10 bg-black/20 px-2 py-1 text-xs text-slate-200 focus:border-cyan-400/40 focus:outline-none"
         />
         <button onClick={add} className="rounded-md bg-cyan-400/15 p-1.5 text-cyan-300 hover:bg-cyan-400/25">
@@ -183,25 +185,16 @@ export function FileListContent({
   block: Block;
   boardId?: string;
 }) {
+  const language = useDashboardStore((s) => s.language);
   const vault = useDashboardStore((s) => s.vault);
   const updateBlockData = useDashboardStore((s) => s.updateBlockData);
 
   const ids = block.data.fileIds ?? [];
   const folderPaths: string[] = (block.data as any).folderPaths ?? [];
 
-  /*
-   * Единый порядок прикреплений.
-   *
-   * file:<id файла>
-   * folder:<путь к папке>
-   *
-   * Нужен именно один список, чтобы файл и папку можно было
-   * перетаскивать друг относительно друга.
-   */
   const savedOrder: string[] = (block.data as any).attachmentOrder ?? [];
 
   const attachmentOrder = [
-    // Оставляем актуальные элементы из уже сохранённого порядка.
     ...savedOrder.filter((item) => {
       if (item.startsWith("file:")) {
         return ids.includes(item.slice("file:".length));
@@ -214,9 +207,6 @@ export function FileListContent({
       return false;
     }),
 
-    // Старые прикрепления, которых ещё нет в новом порядке,
-    // добавляем в конец. Это сохраняет совместимость с блоками,
-    // созданными до добавления перетаскивания.
     ...ids
       .filter((id) => !savedOrder.includes(`file:${id}`))
       .map((id) => `file:${id}`),
@@ -226,7 +216,6 @@ export function FileListContent({
       .map((path) => `folder:${path}`),
   ];
 
-  // Индекс плашки, которую сейчас тащим, и плашки под курсором.
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
@@ -254,7 +243,7 @@ export function FileListContent({
         const script = `
 Add-Type -AssemblyName System.Windows.Forms
 $dialog = New-Object System.Windows.Forms.FolderBrowserDialog
-$dialog.Description = 'Выберите папку'
+$dialog.Description = 'Select folder'
 $dialog.ShowNewFolderButton = $true
 if ($dialog.ShowDialog() -eq 'OK') { Write-Output $dialog.SelectedPath }
 `;
@@ -280,150 +269,124 @@ if ($dialog.ShowDialog() -eq 'OK') { Write-Output $dialog.SelectedPath }
   }
 
   async function openExplorer() {
-  const w = window as any;
+    const w = window as any;
 
-  try {
-    const electron = w.require?.("electron");
-    const dialog = electron?.remote?.dialog ?? electron?.dialog;
-    const basePath: string | undefined =
-      w.app?.vault?.adapter?.getBasePath?.();
+    try {
+      const electron = w.require?.("electron");
+      const dialog = electron?.remote?.dialog ?? electron?.dialog;
+      const basePath: string | undefined =
+        w.app?.vault?.adapter?.getBasePath?.();
 
-    /*
-     * Старый внутренний FilePicker больше не открываем.
-     * Если системный проводник недоступен, просто показываем сообщение.
-     */
-    if (!dialog) {
-      notify("Не удалось открыть системный проводник Windows");
-      return;
-    }
+      if (!dialog) {
+        notify("Failed to open file explorer");
+        return;
+      }
 
-    if (!basePath) {
-      notify("Не удалось определить расположение Vault");
-      return;
-    }
+      if (!basePath) {
+        notify("Failed to locate Vault path");
+        return;
+      }
 
-    const result = await dialog.showOpenDialog({
-      title: "Выберите файл из Vault",
-      defaultPath: basePath,
-      properties: ["openFile", "multiSelections"],
-    });
+      const result = await dialog.showOpenDialog({
+        title: "Select file from Vault",
+        defaultPath: basePath,
+        properties: ["openFile", "multiSelections"],
+      });
 
-    if (result.canceled || !result.filePaths?.length) {
-      return;
-    }
+      if (result.canceled || !result.filePaths?.length) {
+        return;
+      }
 
-    const normalizedBasePath = basePath
-      .replace(/\\/g, "/")
-      .replace(/\/$/, "");
-
-    const newIds: string[] = [];
-
-    /*
-     * Если файл был создан прямо в открытом проводнике Windows,
-     * Obsidian может не успеть сразу добавить его во внутренний индекс.
-     * Поэтому несколько секунд ожидаем его появления.
-     */
-    async function waitForFile(relativePath: string) {
-      const normalizedRelativePath = relativePath
+      const normalizedBasePath = basePath
         .replace(/\\/g, "/")
-        .replace(/^\/+/, "");
+        .replace(/\/$/, "");
 
-      for (let attempt = 0; attempt < 30; attempt += 1) {
-        const currentVault =
-          useDashboardStore.getState().vault;
+      const newIds: string[] = [];
 
-        const file = flattenFiles(currentVault).find(
-          (item) =>
-            item.kind !== "folder" &&
-            item.path.replace(/\\/g, "/").toLowerCase() ===
-              normalizedRelativePath.toLowerCase()
-        );
+      async function waitForFile(relativePath: string) {
+        const normalizedRelativePath = relativePath
+          .replace(/\\/g, "/")
+          .replace(/^\/+/, "");
 
-        if (file) {
-          return file;
+        for (let attempt = 0; attempt < 30; attempt += 1) {
+          const currentVault =
+            useDashboardStore.getState().vault;
+
+          const file = flattenFiles(currentVault).find(
+            (item) =>
+              item.kind !== "folder" &&
+              item.path.replace(/\\/g, "/").toLowerCase() ===
+                normalizedRelativePath.toLowerCase()
+          );
+
+          if (file) {
+            return file;
+          }
+
+          await new Promise<void>((resolve) => {
+            window.setTimeout(resolve, 150);
+          });
         }
 
-        // Ожидаем обновления индекса Obsidian.
-        await new Promise<void>((resolve) => {
-          window.setTimeout(resolve, 150);
-        });
+        return null;
       }
 
-      return null;
-    }
+      for (const fullPath of result.filePaths as string[]) {
+        const normalizedPath = fullPath.replace(/\\/g, "/");
 
-    for (const fullPath of result.filePaths as string[]) {
-      const normalizedPath = fullPath.replace(/\\/g, "/");
+        const isInsideVault =
+          normalizedPath.toLowerCase().startsWith(
+            normalizedBasePath.toLowerCase() + "/"
+          );
 
-      const isInsideVault =
-        normalizedPath.toLowerCase().startsWith(
-          normalizedBasePath.toLowerCase() + "/"
+        if (!isInsideVault) {
+          continue;
+        }
+
+        const relativePath = normalizedPath.slice(
+          normalizedBasePath.length + 1
         );
 
-      if (!isInsideVault) {
-        notify(
-          `Файл вне Vault, пропущен: ${
-            normalizedPath.split("/").pop() ?? normalizedPath
-          }`
-        );
-        continue;
+        const file = await waitForFile(relativePath);
+
+        if (!file) {
+          continue;
+        }
+
+        if (
+          !ids.includes(file.id) &&
+          !newIds.includes(file.id)
+        ) {
+          newIds.push(file.id);
+        }
       }
 
-      const relativePath = normalizedPath.slice(
-        normalizedBasePath.length + 1
+      if (newIds.length === 0) {
+        return;
+      }
+
+      updateBlockData(
+        block.id,
+        {
+          fileIds: [...ids, ...newIds],
+          attachmentOrder: [
+            ...attachmentOrder,
+            ...newIds.map((id) => `file:${id}`),
+          ],
+        } as any,
+        boardId
       );
-
-      const file = await waitForFile(relativePath);
-
-      if (!file) {
-        notify(
-          `Obsidian не успел обнаружить файл: ${relativePath}`
-        );
-        continue;
-      }
-
-      if (
-        !ids.includes(file.id) &&
-        !newIds.includes(file.id)
-      ) {
-        newIds.push(file.id);
-      }
+    } catch (error) {
+      console.error("Error picking files:", error);
     }
-
-    if (newIds.length === 0) {
-      return;
-    }
-
-    updateBlockData(
-      block.id,
-      {
-        fileIds: [...ids, ...newIds],
-        attachmentOrder: [
-          ...attachmentOrder,
-          ...newIds.map((id) => `file:${id}`),
-        ],
-      } as any,
-      boardId
-    );
-  } catch (error) {
-    /*
-     * Важно: старый FilePicker здесь больше не открывается.
-     */
-    console.error(
-      "Ошибка при выборе файлов через проводник:",
-      error
-    );
-
-    notify("Не удалось прикрепить выбранный файл");
   }
-}
+
   async function openFolderPicker() {
     const pickedPath = await pickFolder();
 
     if (!pickedPath) return;
 
     if (folderPaths.includes(pickedPath)) {
-      notify("Эта папка уже прикреплена");
       return;
     }
 
@@ -520,7 +483,6 @@ if ($dialog.ShowDialog() -eq 'OK') { Write-Output $dialog.SelectedPath }
     const nextOrder = [...attachmentOrder];
     const [movedItem] = nextOrder.splice(dragIndex, 1);
 
-    // Если элемент тащат вниз, после удаления его индекс уменьшается на 1.
     const targetIndex = dragIndex < index ? index - 1 : index;
 
     nextOrder.splice(targetIndex, 0, movedItem);
@@ -542,7 +504,6 @@ if ($dialog.ShowDialog() -eq 'OK') { Write-Output $dialog.SelectedPath }
 
   return (
     <div className="space-y-1.5">
-      {/* Файлы и папки выводятся по ЕДИНОМУ порядку */}
       {attachmentOrder.map((attachment, index) => {
         if (attachment.startsWith("file:")) {
           const fileId = attachment.slice("file:".length);
@@ -588,10 +549,9 @@ if ($dialog.ShowDialog() -eq 'OK') { Write-Output $dialog.SelectedPath }
 
       {attachmentOrder.length === 0 && (
         <p className="rounded-lg border border-white/10 py-3 text-center text-xs text-slate-500">
-          Нет файлов. Нажмите ПКМ по блоку — прикрепите файл или папку.
+          {t("content.fileList.empty", language)}
         </p>
       )}
-
     </div>
   );
 }
@@ -601,7 +561,6 @@ if ($dialog.ShowDialog() -eq 'OK') { Write-Output $dialog.SelectedPath }
 function normalizeUrl(raw: string): string {
   const s = raw.trim();
   if (!s) return "";
-  // Уже указана схема: https://, http://, obsidian://, mailto:, tel:
   if (/^[a-z][a-z0-9+.-]*:\/\//i.test(s) || /^(mailto|tel):/i.test(s)) return s;
   return `https://${s}`;
 }
@@ -623,23 +582,20 @@ function openExternalUrl(raw: string) {
 }
 
 export function LinkContent({ block, boardId }: { block: Block; boardId?: string }) {
+  const language = useDashboardStore((s) => s.language);
   const updateBlockData = useDashboardStore((s) => s.updateBlockData);
 
-  // Редактирование существующей ссылки
   const [editingId, setEditingId] = useState<string | null>(null);
   const [url, setUrl] = useState("");
   const [label, setLabel] = useState("");
 
-  // Добавление новой ссылки
   const [addingNew, setAddingNew] = useState(false);
   const [newUrl, setNewUrl] = useState("");
   const [newLabel, setNewLabel] = useState("");
 
-  // Контекстное меню (ПКМ по плашке)
   const [menu, setMenu] = useState<{ x: number; y: number; linkId: string } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Перетаскивание плашек
   const containerRef = useRef<HTMLDivElement>(null);
   const chipRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const pressRef = useRef<{ id: string; startX: number; startY: number; moved: boolean } | null>(null);
@@ -650,14 +606,13 @@ export function LinkContent({ block, boardId }: { block: Block; boardId?: string
   const links: LinkEntry[] =
     block.data.links ??
     (block.data.url
-      ? [{ id: "legacy-link", url: block.data.url, label: block.data.linkLabel ?? "Ссылка" }]
+      ? [{ id: "legacy-link", url: block.data.url, label: block.data.linkLabel ?? "Link" }]
       : []);
 
   function commitLinks(next: LinkEntry[]) {
     updateBlockData(block.id, { links: next, url: undefined, linkLabel: undefined }, boardId);
   }
 
-  /* --- закрытие контекстного меню --- */
   useEffect(() => {
     if (!menu) return;
     function onDown(e: PointerEvent) {
@@ -693,7 +648,6 @@ export function LinkContent({ block, boardId }: { block: Block; boardId?: string
     setMenu({ x, y, linkId });
   }
 
-  /* --- действия --- */
   function startEdit(link: LinkEntry) {
     setAddingNew(false);
     setEditingId(link.id);
@@ -710,9 +664,12 @@ export function LinkContent({ block, boardId }: { block: Block; boardId?: string
   }
 
   function removeLink(id: string) {
-    commitLinks(links.filter((l) => l.id !== id));
-    if (editingId === id) setEditingId(null);
+  commitLinks(links.filter((link) => link.id !== id));
+
+  if (editingId === id) {
+    setEditingId(null);
   }
+}
 
   function addLink() {
     const u = newUrl.trim();
@@ -723,7 +680,6 @@ export function LinkContent({ block, boardId }: { block: Block; boardId?: string
     setAddingNew(false);
   }
 
-  /* --- перетаскивание --- */
   function computeDrop(clientX: number, clientY: number) {
     let index = links.length;
     let bestDist = Infinity;
@@ -733,7 +689,7 @@ export function LinkContent({ block, boardId }: { block: Block; boardId?: string
       const cx = r.left + r.width / 2;
       const cy = r.top + r.height / 2;
       const dx = clientX - cx;
-      const dy = (clientY - cy) * 3; // попадание в строку важнее, чем в колонку
+      const dy = (clientY - cy) * 3;
       const dist = dx * dx + dy * dy;
       if (dist < bestDist) {
         bestDist = dist;
@@ -771,7 +727,7 @@ export function LinkContent({ block, boardId }: { block: Block; boardId?: string
       setMenu(null);
       return;
     }
-    e.stopPropagation(); // чтобы не начал двигаться сам блок
+    e.stopPropagation();
     pressRef.current = { id, startX: e.clientX, startY: e.clientY, moved: false };
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
@@ -816,7 +772,6 @@ export function LinkContent({ block, boardId }: { block: Block; boardId?: string
       return;
     }
 
-    // Клик без движения — открываем ссылку
     openExternalUrl(link.url);
   }
 
@@ -841,7 +796,7 @@ export function LinkContent({ block, boardId }: { block: Block; boardId?: string
                   if (e.key === "Enter") saveEdit();
                   if (e.key === "Escape") setEditingId(null);
                 }}
-                placeholder="Название ссылки"
+                placeholder={t("content.link.titlePlaceholder", language)}
                 className="w-full rounded-md border border-white/10 bg-black/20 px-2 py-1 text-xs text-slate-200 focus:border-cyan-400/40 focus:outline-none"
               />
               <input
@@ -856,10 +811,10 @@ export function LinkContent({ block, boardId }: { block: Block; boardId?: string
               />
               <div className="flex justify-end gap-2">
                 <button onClick={() => setEditingId(null)} className="rounded-md px-2 py-1 text-xs text-slate-400 hover:bg-white/5">
-                  Отмена
+                  {t("content.note.cancel", language)}
                 </button>
                 <button onClick={saveEdit} className="rounded-md bg-cyan-400/15 px-2 py-1 text-xs text-cyan-300 hover:bg-cyan-400/25">
-                  Сохранить
+                  {t("content.note.save", language)}
                 </button>
               </div>
             </div>
@@ -891,13 +846,13 @@ export function LinkContent({ block, boardId }: { block: Block; boardId?: string
         )}
 
         {!addingNew && (
-                    <button
+          <button
             type="button"
             onClick={() => {
               setEditingId(null);
               setAddingNew(true);
             }}
-            title="Добавить ссылку"
+            title={t("content.link.addTitle", language)}
             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
             style={{
               background: "transparent",
@@ -931,7 +886,6 @@ export function LinkContent({ block, boardId }: { block: Block; boardId?: string
           </button>
         )}
 
-        {/* Метка места вставки при перетаскивании */}
         {marker && (
           <span
             className="pointer-events-none absolute w-0.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(56,232,255,.9)]"
@@ -942,7 +896,7 @@ export function LinkContent({ block, boardId }: { block: Block; boardId?: string
 
       {links.length === 0 && !addingNew && (
         <p className="rounded-lg border border-white/10 py-3 text-center text-xs text-slate-500">
-          Ссылок пока нет
+          {t("content.link.empty", language)}
         </p>
       )}
 
@@ -956,7 +910,7 @@ export function LinkContent({ block, boardId }: { block: Block; boardId?: string
               if (e.key === "Enter") addLink();
               if (e.key === "Escape") setAddingNew(false);
             }}
-            placeholder="Название ссылки"
+            placeholder={t("content.link.titlePlaceholder", language)}
             className="w-full rounded-md border border-white/10 bg-black/20 px-2 py-1 text-xs text-slate-200 focus:border-cyan-400/40 focus:outline-none"
           />
           <input
@@ -978,16 +932,15 @@ export function LinkContent({ block, boardId }: { block: Block; boardId?: string
               }}
               className="rounded-md px-2 py-1 text-xs text-slate-400 hover:bg-white/5"
             >
-              Отмена
+              {t("content.note.cancel", language)}
             </button>
             <button onClick={addLink} className="rounded-md bg-cyan-400/15 px-2 py-1 text-xs text-cyan-300 hover:bg-cyan-400/25">
-              Добавить
+              {t("content.link.add", language)}
             </button>
           </div>
         </div>
       )}
 
-      {/* «Призрак» перетаскиваемой плашки */}
       {dragging &&
         ghost &&
         createPortal(
@@ -1000,7 +953,6 @@ export function LinkContent({ block, boardId }: { block: Block; boardId?: string
           document.body
         )}
 
-      {/* Контекстное меню (ПКМ по плашке) */}
       {menu &&
         menuLink &&
         createPortal(
@@ -1020,7 +972,7 @@ export function LinkContent({ block, boardId }: { block: Block; boardId?: string
                 className="flex items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-cyan-300 hover:bg-cyan-400/10"
               >
                 <ExternalLink size={14} />
-                Открыть
+                {t("content.link.open", language)}
               </button>
               <button
                 type="button"
@@ -1031,7 +983,7 @@ export function LinkContent({ block, boardId }: { block: Block; boardId?: string
                 className="flex items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-slate-300 hover:bg-white/10 hover:text-slate-100"
               >
                 <Pencil size={14} />
-                Изменить
+                {t("content.link.edit", language)}
               </button>
               <button
                 type="button"
@@ -1042,7 +994,7 @@ export function LinkContent({ block, boardId }: { block: Block; boardId?: string
                 className="flex items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-slate-400 hover:bg-white/10 hover:text-slate-200"
               >
                 <Copy size={14} />
-                Скопировать адрес
+                {t("content.link.copy", language)}
               </button>
               <div className="my-0.5 border-t border-white/10" />
               <button
@@ -1054,7 +1006,7 @@ export function LinkContent({ block, boardId }: { block: Block; boardId?: string
                 className="flex items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-rose-400 hover:bg-rose-400/10 hover:text-rose-300"
               >
                 <Trash2 size={14} />
-                Удалить
+                {t("content.link.delete", language)}
               </button>
             </div>
           </div>,
@@ -1065,6 +1017,7 @@ export function LinkContent({ block, boardId }: { block: Block; boardId?: string
 }
 
 export function BoardListContent({ block, boardId }: { block: Block; boardId?: string }) {
+  const language = useDashboardStore((s) => s.language);
   const navigate = useDashboardStore((s) => s.navigate);
   const boards = useDashboardStore((s) => s.boards);
   const createBoard = useDashboardStore((s) => s.createBoard);
@@ -1100,7 +1053,9 @@ export function BoardListContent({ block, boardId }: { block: Block; boardId?: s
             >
               {sub.title}
             </button>
-            <span className="shrink-0 text-[9px] text-slate-500">{sub.blocks.length} блок.</span>
+            <span className="shrink-0 text-[9px] text-slate-500">
+              {t("block.blocksCount", language, { count: sub.blocks.length })}
+            </span>
             <button
               onClick={() => removeItem(id)}
               className="shrink-0 text-slate-500 opacity-0 hover:text-rose-300 group-hover:opacity-100"
@@ -1112,7 +1067,7 @@ export function BoardListContent({ block, boardId }: { block: Block; boardId?: s
       })}
       {ids.length === 0 && (
         <p className="rounded-lg border border-white/10 py-3 text-center text-xs text-slate-500">
-          Список пуст
+          {t("content.boardList.empty", language)}
         </p>
       )}
       <div className="flex items-center gap-1.5">
@@ -1120,7 +1075,7 @@ export function BoardListContent({ block, boardId }: { block: Block; boardId?: s
           value={newTitle}
           onChange={(e) => setNewTitle(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && addItem()}
-          placeholder="Новый пункт списка..."
+          placeholder={t("content.boardList.placeholder", language)}
           className="w-full rounded-md border border-white/10 bg-black/20 px-2 py-1 text-xs text-slate-200 focus:border-cyan-400/40 focus:outline-none"
         />
         <button onClick={addItem} className="rounded-md bg-cyan-400/15 p-1.5 text-cyan-300 hover:bg-cyan-400/25">
@@ -1132,6 +1087,7 @@ export function BoardListContent({ block, boardId }: { block: Block; boardId?: s
 }
 
 export function FlowchartMiniContent({ block, boardId }: { block: Block; boardId?: string }) {
+  const language = useDashboardStore((s) => s.language);
   const navigate = useDashboardStore((s) => s.navigate);
   const createFlowchartFile = useDashboardStore((s) => s.createFlowchartFile);
   const updateBlockData = useDashboardStore((s) => s.updateBlockData);
@@ -1140,7 +1096,6 @@ export function FlowchartMiniContent({ block, boardId }: { block: Block; boardId
   const [newName, setNewName] = useState("");
   const [creating, setCreating] = useState(false);
 
-  // Поддержка старого одного файла и нового списка файлов
   const ids: string[] =
     block.data.flowchartIds?.length
       ? block.data.flowchartIds
@@ -1148,22 +1103,7 @@ export function FlowchartMiniContent({ block, boardId }: { block: Block; boardId
         ? [block.data.flowchartId]
         : [];
 
-  const idsKey = ids.join("|");
-
-  // Нужен только для отображения уже прикреплённых досок.
-  // Список всех досок из Vault больше не выводим.
   const allFlows = flattenFiles(vault).filter((f) => f.kind === "flowchart");
-
-  function notify(message: string) {
-    const w = window as any;
-    const Notice = w.require?.("obsidian")?.Notice;
-
-    if (Notice) {
-      new Notice(message);
-    } else {
-      console.warn(message);
-    }
-  }
 
   function removeFlow(path: string) {
     const next = ids.filter((p) => p !== path);
@@ -1173,7 +1113,7 @@ export function FlowchartMiniContent({ block, boardId }: { block: Block; boardId
       {
         flowchartIds: next,
         flowchartId: next[0],
-      },
+      }, 
       boardId
     );
   }
@@ -1184,7 +1124,9 @@ export function FlowchartMiniContent({ block, boardId }: { block: Block; boardId
     setCreating(true);
 
     try {
-      const created = await createFlowchartFile(newName.trim() || "Новая доска");
+      const created = await createFlowchartFile(
+        newName.trim() || t("content.flowchart.newDefault", language)
+      );
 
       if (created) {
         const next = [...ids, created];
@@ -1205,179 +1147,11 @@ export function FlowchartMiniContent({ block, boardId }: { block: Block; boardId
     }
   }
 
-  async function pickFlowchartFileFromExplorer(): Promise<string | null> {
-    const w = window as any;
-
-    const basePath: string | undefined =
-      w.app?.vault?.adapter?.getBasePath?.();
-
-    if (!basePath) {
-      notify("Не удалось определить путь к Vault");
-      return null;
-    }
-
-    try {
-      const electron = w.require?.("electron");
-      const dialog = electron?.remote?.dialog ?? electron?.dialog;
-
-      if (dialog?.showOpenDialog) {
-        const result = await dialog.showOpenDialog({
-          title: "Выберите файл доски",
-          defaultPath: basePath,
-          filters: [
-            {
-              name: "Файлы досок",
-              extensions: ["flow"],
-            },
-          ],
-          properties: ["openFile"],
-        });
-
-        if (result.canceled || !result.filePaths?.length) {
-          return null;
-        }
-
-        return String(result.filePaths[0]);
-      }
-    } catch (error) {
-      console.warn("Electron dialog недоступен:", error);
-    }
-
-    try {
-      const cp = w.require?.("child_process");
-
-      if (!cp?.execFile) {
-        notify("Не удалось открыть системный проводник Windows");
-        return null;
-      }
-
-      const psBasePath = basePath.replace(/'/g, "''");
-
-      const script = `
-Add-Type -AssemblyName System.Windows.Forms
-$dialog = New-Object System.Windows.Forms.OpenFileDialog
-$dialog.Title = 'Выберите файл доски'
-$dialog.InitialDirectory = '${psBasePath}'
-$dialog.Filter = 'Файлы досок (*.flow)|*.flow'
-$dialog.Multiselect = $false
-if ($dialog.ShowDialog() -eq 'OK') { Write-Output $dialog.FileName }
-`;
-
-      return await new Promise<string | null>((resolve) => {
-        cp.execFile(
-          "powershell.exe",
-          ["-NoProfile", "-STA", "-Command", script],
-          { windowsHide: true },
-          (err: any, stdout: string) => {
-            if (err) {
-              resolve(null);
-              return;
-            }
-
-            const pickedPath = String(stdout).trim();
-            resolve(pickedPath || null);
-          }
-        );
-      });
-    } catch (error) {
-      console.error("Ошибка при открытии проводника:", error);
-      notify("Не удалось открыть системный проводник Windows");
-      return null;
-    }
-  }
-
-  async function attachFlowchartFromExplorer() {
-    const w = window as any;
-
-    try {
-      const basePath: string | undefined =
-        w.app?.vault?.adapter?.getBasePath?.();
-
-      if (!basePath) {
-        notify("Не удалось определить путь к Vault");
-        return;
-      }
-
-      const pickedPath = await pickFlowchartFileFromExplorer();
-
-      if (!pickedPath) {
-        return;
-      }
-
-      const normalizedPickedPath = pickedPath
-        .replace(/\\/g, "/");
-
-      const normalizedBasePath = basePath
-        .replace(/\\/g, "/")
-        .replace(/\/$/, "");
-
-      const isInsideVault =
-        normalizedPickedPath.toLowerCase().startsWith(
-          normalizedBasePath.toLowerCase() + "/"
-        );
-
-      if (!isInsideVault) {
-        notify("Можно выбрать только .flow файл внутри текущего Vault");
-        return;
-      }
-
-      const relativePath = normalizedPickedPath.slice(
-        normalizedBasePath.length + 1
-      );
-
-      if (!relativePath.toLowerCase().endsWith(".flow")) {
-        notify("Можно прикрепить только файл с расширением .flow");
-        return;
-      }
-
-      if (ids.includes(relativePath)) {
-        notify("Эта доска уже добавлена в данный блок");
-        return;
-      }
-
-      const next = [...ids, relativePath];
-
-      updateBlockData(
-        block.id,
-        {
-          flowchartIds: next,
-          flowchartId: next[0],
-        },
-        boardId
-      );
-
-      notify("Доска добавлена в блок");
-    } catch (error) {
-      console.error("Ошибка при выборе доски:", error);
-      notify("Не удалось добавить доску");
-    }
-  }
-
-  useEffect(() => {
-    const handleOpenFlowchartPicker = () => {
-      void attachFlowchartFromExplorer();
-    };
-
-    window.addEventListener(
-      `open-flowchart-picker-${block.id}`,
-      handleOpenFlowchartPicker
-    );
-
-    return () => {
-      window.removeEventListener(
-        `open-flowchart-picker-${block.id}`,
-        handleOpenFlowchartPicker
-      );
-    };
-  }, [block.id, idsKey, boardId]);
-
   return (
     <div className="space-y-1.5">
-      {/* Уже прикреплённые .flow файлы */}
       {ids.map((path) => {
         const file = allFlows.find((f) => f.path === path);
 
-        // Если файл найден в vault — используем готовый FileRow
         if (file) {
           return (
             <FileRow
@@ -1388,8 +1162,6 @@ if ($dialog.ShowDialog() -eq 'OK') { Write-Output $dialog.FileName }
           );
         }
 
-        // Если по какой-то причине файл не найден в индексе,
-        // всё равно показываем строку, чтобы можно было открыть или убрать
         return (
           <div
             key={path}
@@ -1401,7 +1173,7 @@ if ($dialog.ShowDialog() -eq 'OK') { Write-Output $dialog.FileName }
               type="button"
               onClick={() => navigate({ name: "flowchart", path })}
               className="min-w-0 flex-1 overflow-hidden text-center"
-              title={`Открыть ${path}`}
+              title={`Open ${path}`}
             >
               <p className="block w-full truncate text-center text-xs text-slate-200">
                 {path.split("/").pop()?.replace(/\.flow$/i, "") ?? path}
@@ -1412,7 +1184,6 @@ if ($dialog.ShowDialog() -eq 'OK') { Write-Output $dialog.FileName }
               type="button"
               onClick={() => removeFlow(path)}
               className="shrink-0 rounded p-1 text-slate-500 opacity-0 transition hover:text-rose-300 group-hover:opacity-100"
-              title="Убрать из блока"
             >
               <X size={13} />
             </button>
@@ -1422,17 +1193,16 @@ if ($dialog.ShowDialog() -eq 'OK') { Write-Output $dialog.FileName }
 
       {ids.length === 0 && (
         <p className="rounded-lg border border-white/10 py-3 text-center text-xs text-slate-500">
-          Нет досок. Создайте новую ниже или нажмите ПКМ по блоку — Добавить доску.
+          {t("content.flowchart.empty", language)}
         </p>
       )}
 
-      {/* Создание новой доски */}
       <div className="flex items-center gap-1.5 pt-0.5">
         <input
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && void createNew()}
-          placeholder="Имя новой доски..."
+          placeholder={t("content.flowchart.placeholder", language)}
           className="w-full rounded-md border border-white/10 bg-black/20 px-2 py-1 text-xs text-slate-200 focus:border-violet-400/40 focus:outline-none"
         />
 
@@ -1443,57 +1213,13 @@ if ($dialog.ShowDialog() -eq 'OK') { Write-Output $dialog.FileName }
           className="flex shrink-0 items-center gap-1 rounded-md bg-violet-400/15 px-2.5 py-1 text-xs text-violet-300 hover:bg-violet-400/25 disabled:opacity-50"
         >
           <Plus size={12} />
-          {creating ? "..." : "Создать"}
+          {creating ? "..." : t("content.flowchart.create", language)}
         </button>
       </div>
     </div>
   );
 }
-export function HostlyMiniContent({ block }: { block: Block }) {
-  const navigate = useDashboardStore((s) => s.navigate);
-  const loadHostly = useDashboardStore((s) => s.loadHostly);
-  const path = block.data.hostlyId;
-  const [doc, setDoc] = useState<HostlyDoc | null>(null);
 
-  useEffect(() => {
-    if (!path) return;
-    loadHostly(path).then(setDoc);
-  }, [path]);
-
-  const statusColor: Record<string, string> = {
-    online: "bg-emerald-400",
-    offline: "bg-rose-400",
-    degraded: "bg-amber-400",
-    unknown: "bg-slate-500",
-  };
-
-  if (!path || !doc) return <p className="text-xs text-slate-500">Файл не найден</p>;
-
-  return (
-    <div className="space-y-2">
-      <div className="space-y-1">
-        {doc.services.slice(0, 4).map((svc) => (
-          <div
-            key={svc.id}
-            className="flex items-center gap-2 rounded-md border border-white/5 bg-white/[0.02] px-2.5 py-1.5 text-xs"
-          >
-            <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${statusColor[svc.status]}`} />
-            <span className="flex-1 truncate text-slate-200">{svc.name}</span>
-            <span className="font-mono-techno text-[10px] text-slate-500">
-              {svc.host}:{svc.port}
-            </span>
-          </div>
-        ))}
-      </div>
-      <button
-        onClick={() => navigate({ name: "hostly", path })}
-        className="flex w-full items-center justify-center gap-1.5 rounded-md border border-amber-400/20 bg-amber-400/5 py-1.5 text-xs text-amber-300 hover:bg-amber-400/15"
-      >
-        <Server size={12} /> Открыть редактор Hostly
-      </button>
-    </div>
-  );
-}
 
 export function ViewToggleIcon({ editing }: { editing: boolean }) {
   return editing ? <Eye size={13} /> : <Pencil size={13} />;

@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import type { BlockType } from "../../types";
 import { cn } from "../../utils/cn";
+import { useDashboardStore } from "../../store/dashboardStore";
+import { t } from "../../i18n";
 
 const MENU_WIDTH = 224;
 const VIEWPORT_GAP = 8;
@@ -26,13 +28,13 @@ export const BLOCK_TYPE_OPTIONS: {
   label: string;
   icon: typeof Boxes;
 }[] = [
-  { type: "group", label: "Группа", icon: Boxes },
-  { type: "note", label: "Заметка", icon: StickyNote },
-  { type: "file-list", label: "Файлы", icon: ListTree },
-  { type: "board-list", label: "Список", icon: LayoutList },
-  { type: "flowchart", label: "Доска", icon: Network },
-  { type: "checklist", label: "Чек-лист", icon: ListChecks },
-  { type: "link", label: "Ссылка", icon: Link2 },
+  { type: "group", label: "group", icon: Boxes },
+  { type: "note", label: "note", icon: StickyNote },
+  { type: "file-list", label: "file-list", icon: ListTree },
+  { type: "board-list", label: "board-list", icon: LayoutList },
+  { type: "flowchart", label: "flowchart", icon: Network },
+  { type: "checklist", label: "checklist", icon: ListChecks },
+  { type: "link", label: "link", icon: Link2 },
 ];
 
 function BlockMenuOptions({
@@ -40,6 +42,8 @@ function BlockMenuOptions({
 }: {
   onSelect: (type: BlockType) => void;
 }) {
+  const language = useDashboardStore((s: any) => s.language);
+
   return (
     <>
       {BLOCK_TYPE_OPTIONS.map((opt) => (
@@ -55,7 +59,7 @@ function BlockMenuOptions({
           />
 
           <span className="nd-menu-item truncate text-sm font-medium">
-            {opt.label}
+            {t("block." + opt.label, language)}
           </span>
         </button>
       ))}
@@ -63,10 +67,6 @@ function BlockMenuOptions({
   );
 }
 
-/**
- * Обычная кнопка «+ Блок».
- * Она продолжает использоваться внутри существующих карточек.
- */
 export function AddBlockMenu({
   onAdd,
   compact,
@@ -74,6 +74,7 @@ export function AddBlockMenu({
   onAdd: (type: BlockType) => void;
   compact?: boolean;
 }) {
+  const language = useDashboardStore((s: any) => s.language);
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, left: 0 });
 
@@ -135,13 +136,13 @@ export function AddBlockMenu({
         type="button"
         ref={btnRef}
         onClick={toggle}
-          className={cn(
-  "nd-btn-add-button inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition hover:opacity-80",
-  compact && "px-2 py-1"
-)}
+        className={cn(
+          "nd-btn-add-button inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition hover:opacity-80",
+          compact && "px-2 py-1"
+        )}
       >
         <Plus className="nd-icon-accent" size={13} />
-        Блок
+        {t("addblock.button", language)}
       </button>
 
       {open &&
@@ -170,10 +171,6 @@ export function AddBlockMenu({
   );
 }
 
-/**
- * Контекстное меню рабочего пространства.
- * Открывается в координатах нажатия правой кнопки мыши.
- */
 export function AddBlockContextMenu({
   open,
   x,

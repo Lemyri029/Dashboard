@@ -12,21 +12,21 @@ import {
   Trash2,
 } from "lucide-react";
 import { useDashboardStore } from "../store/dashboardStore";
-import { KIND_LABEL, formatBytes, isLaunchable } from "../utils/vault";
+import { getKindLabel, formatBytes, isLaunchable } from "../utils/vault";
 import type { FileKind, VaultFile } from "../types";
 import { FileIcon } from "../components/FileIcon";
 import { VaultTree } from "../components/VaultTree";
+import { t } from "../i18n";
 
 const ROOT_KEY = "__vault_root__";
 
-const FILTERS: { key: FileKind | "all"; label: string }[] = [
-  { key: "all", label: "Все" },
-  { key: "markdown", label: "Markdown" },
-  { key: "pdf", label: "PDF" },
-  { key: "text", label: "Текст" },
-  { key: "hostly", label: "Hostly" },
-  { key: "flowchart", label: "Схемы" },
-  { key: "executable", label: "Программы" },
+const FILTERS: { key: FileKind | "all"; labelKey: string }[] = [
+  { key: "all", labelKey: "files.filter.all" },
+  { key: "markdown", labelKey: "files.filter.markdown" },
+  { key: "pdf", labelKey: "files.filter.pdf" },
+  { key: "text", labelKey: "files.filter.text" },
+  { key: "flowchart", labelKey: "files.filter.flowchart" },
+  { key: "executable", labelKey: "files.filter.executable" },
 ];
 
 function countFiles(nodes: VaultFile[]): number {
@@ -126,6 +126,7 @@ function FileChip({ file }: { file: VaultFile }) {
   const revealInExplorer = useDashboardStore((s) => s.revealInExplorer);
   const openInObsidian = useDashboardStore((s) => s.openInObsidian);
   const deleteFile = useDashboardStore((s) => s.deleteFile);
+  const language = useDashboardStore((s) => s.language);
   const launchable = isLaunchable(file);
 
   /*
@@ -173,17 +174,13 @@ function FileChip({ file }: { file: VaultFile }) {
       return;
     }
 
-    if (file.kind === "hostly") {
-      navigate({ name: "hostly", path: file.path });
-      return;
-    }
-
+  
     navigate({ name: "file", path: file.path });
   }
 
   async function handleDelete() {
     const confirmed = window.confirm(
-      `Удалить файл «${file.name}»?\n\nФайл будет перемещён в корзину согласно настройкам Obsidian.`
+      t("files.deleteConfirm", language, { name: file.name })
     );
 
     if (!confirmed) return;
@@ -222,7 +219,7 @@ function FileChip({ file }: { file: VaultFile }) {
     <div
       onContextMenu={handleContextMenu}
       className="group inline-flex w-fit max-w-full cursor-context-menu items-center gap-1.5 rounded-md border border-white/5 bg-white/[0.03] py-1 pl-2 pr-2 transition hover:border-cyan-400/25 hover:bg-white/[0.06]"
-      title={`${file.name} · ${KIND_LABEL[file.kind]} · ${formatBytes(file.size)}\nПКМ — меню`}
+      title={`${file.name} · ${getKindLabel(file.kind, language)} · ${formatBytes(file.size, language)}\n${t("files.rightClickHint", language)}`}
     >
       <FileIcon kind={file.kind} className="h-3.5 w-3.5 shrink-0" />
 
@@ -252,7 +249,7 @@ function FileChip({ file }: { file: VaultFile }) {
                   className="flex items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-emerald-300 hover:bg-emerald-400/10"
                 >
                   <PlayCircle size={14} />
-                  Запустить
+                  {t("files.menu.launch", language)}
                 </button>
               ) : (
                 <button
@@ -264,7 +261,7 @@ function FileChip({ file }: { file: VaultFile }) {
                   className="flex items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-cyan-300 hover:bg-cyan-400/10"
                 >
                   <ExternalLink size={14} />
-                  Открыть
+                  {t("files.menu.open", language)}
                 </button>
               )}
 
@@ -277,7 +274,7 @@ function FileChip({ file }: { file: VaultFile }) {
                 className="flex items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-slate-400 hover:bg-white/10 hover:text-slate-200"
               >
                 <FolderOpen size={14} />
-                В проводнике
+                {t("files.menu.reveal", language)}
               </button>
 
               {(file.kind === "markdown" || file.kind === "pdf") && (
@@ -296,7 +293,7 @@ function FileChip({ file }: { file: VaultFile }) {
                       strokeWidth="1.6"
                     />
                   </svg>
-                  В Obsidian
+                  {t("files.menu.obsidian", language)}
                 </button>
               )}
 
@@ -309,7 +306,7 @@ function FileChip({ file }: { file: VaultFile }) {
                 className="flex items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-rose-400 hover:bg-rose-400/10 hover:text-rose-300"
               >
                 <Trash2 size={14} />
-                Удалить
+                {t("files.menu.delete", language)}
               </button>
             </div>
           </div>,
@@ -423,6 +420,7 @@ function FolderBranch({
 
 export default function FilesPage() {
   const vault = useDashboardStore((s) => s.vault);
+  const language = useDashboardStore((s) => s.language);
 
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<FileKind | "all">("all");
@@ -472,7 +470,7 @@ export default function FilesPage() {
     <div className="mx-auto flex h-full max-w-[1400px] gap-5 px-6 py-6">
       <div className="glass-panel hidden w-72 shrink-0 overflow-y-auto rounded-xl p-3 lg:block">
         <p className="mb-2 flex items-center gap-1.5 px-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-          <FolderTree size={12} /> Дерево vault
+          <FolderTree size={12} /> {t("files.tree", language)}
         </p>
 
         <VaultTree files={vault} />
@@ -486,10 +484,10 @@ export default function FilesPage() {
 
           <div>
             <h1 className="text-xl font-bold tracking-tight text-slate-100">
-              Файлы vault
+              {t("files.title", language)}
             </h1>
             <p className="text-xs text-slate-500">
-              {totalCount} файлов найдено
+              {t("files.found", language, { count: totalCount })}
             </p>
           </div>
         </div>
@@ -501,7 +499,7 @@ export default function FilesPage() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Поиск файла..."
+              placeholder={t("files.search", language)}
               className="bg-transparent text-xs text-slate-200 focus:outline-none"
             />
           </div>
@@ -517,7 +515,7 @@ export default function FilesPage() {
                   : "text-slate-400 hover:bg-white/5"
               }`}
             >
-              {f.key === "all" ? f.label : KIND_LABEL[f.key]}
+              {t(f.labelKey, language)}
             </button>
           ))}
 
@@ -527,7 +525,7 @@ export default function FilesPage() {
               onClick={expandAll}
               className="rounded-md border border-white/10 px-2.5 py-1 text-[11px] text-slate-400 hover:border-cyan-400/30 hover:text-cyan-300"
             >
-              Развернуть всё
+              {t("files.expandAll", language)}
             </button>
 
             <button
@@ -535,7 +533,7 @@ export default function FilesPage() {
               onClick={collapseAll}
               className="rounded-md border border-white/10 px-2.5 py-1 text-[11px] text-slate-400 hover:border-white/20 hover:text-slate-200"
             >
-              Свернуть всё
+              {t("files.collapseAll", language)}
             </button>
           </div>
         </div>
@@ -559,7 +557,7 @@ export default function FilesPage() {
             )}
 
             <span className="truncate text-xs font-semibold text-slate-200">
-              Корень vault
+              {t("files.root", language)}
             </span>
 
             <span className="shrink-0 text-[10px] text-slate-500">
@@ -578,7 +576,7 @@ export default function FilesPage() {
 
           {totalCount === 0 && (
             <p className="rounded-xl border border-dashed border-white/10 py-16 text-center text-sm text-slate-500">
-              Ничего не найдено
+              {t("files.noResults", language)}
             </p>
           )}
         </div>

@@ -14,7 +14,6 @@ import {
   StickyNote,
   ListTree,
   Network,
-  Server,
   Link2,
   ListChecks,
   LayoutList,
@@ -34,10 +33,10 @@ import {
   FileListContent,
   LinkContent,
   FlowchartMiniContent,
-  HostlyMiniContent,
   BoardListContent,
 } from "./BlockContents";
 import { cn } from "../../utils/cn";
+import { t } from "../../i18n";
 
 const MENU_WIDTH = 224;
 const VIEWPORT_GAP = 8;
@@ -47,7 +46,6 @@ const TYPE_ICON: Record<BlockType, typeof Boxes> = {
   note: StickyNote,
   "file-list": ListTree,
   flowchart: Network,
-  hostly: Server,
   link: Link2,
   graph: Network,
   checklist: ListChecks,
@@ -98,6 +96,7 @@ function BlockContextMenu({
   onEditNote?: () => void;
   onClose: () => void;
 }) {
+    const language = useDashboardStore((s) => s.language);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const [panel, setPanel] = useState<"colors" | "add" | null>(null);
@@ -207,7 +206,7 @@ function BlockContextMenu({
           className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm font-medium text-slate-200 transition hover:bg-white/5"
         >
           <Paperclip size={15} className="text-cyan-300" />
-          Прикрепить файл
+          {t("block.menu.attachFile", language)}
         </button>
       )}
       {onAttachFolder && (
@@ -220,7 +219,7 @@ function BlockContextMenu({
           className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm font-medium text-slate-200 transition hover:bg-white/5"
         >
           <FolderOpen size={15} className="text-amber-300" />
-          Прикрепить папку
+          {t("block.menu.attachFolder", language)}
         </button>
       )}
             {onAttachFlowchart && (
@@ -233,7 +232,7 @@ function BlockContextMenu({
           className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm font-medium text-slate-200 transition hover:bg-white/5"
         >
           <Network size={15} className="text-violet-300" />
-          Добавить доску
+          {t("block.menu.addBoard", language)}
         </button>
       )}
       {/* Особое действие для блока «Заметка» */}
@@ -247,7 +246,7 @@ function BlockContextMenu({
           className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm font-medium text-slate-200 transition hover:bg-white/5"
         >
           <Pencil size={15} className="text-cyan-300" />
-          Редактировать заметку
+          {t("block.menu.editNote", language)}
         </button>
       )}
 
@@ -267,7 +266,7 @@ function BlockContextMenu({
       >
         <Palette size={15} className="text-cyan-300" />
 
-        <span className="flex-1">Цвет блока</span>
+        <span className="flex-1">{t("block.menu.color", language)}</span>
 
         <span
           className="h-3.5 w-3.5 rounded-full ring-1 ring-white/30"
@@ -323,7 +322,7 @@ function BlockContextMenu({
       >
         <Plus size={15} className="text-cyan-300" />
 
-        <span className="flex-1">Добавить блок</span>
+        <span className="flex-1">{t("block.menu.addChild", language)}</span>
 
         <ChevronRight
           size={14}
@@ -351,7 +350,9 @@ function BlockContextMenu({
                 className="shrink-0 text-cyan-300"
               />
 
-              <span className="truncate">{option.label}</span>
+              <span className="truncate">
+  {t("block." + option.type, language)}
+</span>
             </button>
           ))}
         </div>
@@ -369,7 +370,7 @@ function BlockContextMenu({
         className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm font-medium text-rose-300 transition hover:bg-rose-400/10"
       >
         <Trash2 size={15} />
-        Удалить блок
+        {t("block.menu.delete", language)}
       </button>
     </div>,
     document.body
@@ -386,6 +387,7 @@ export function BlockNode({
   boardId?: string;
 }) {
   const toggleCollapse = useDashboardStore((s) => s.toggleCollapse);
+    const language = useDashboardStore((s) => s.language);
   const removeBlock = useDashboardStore((s) => s.removeBlock);
   const updateBlock = useDashboardStore((s) => s.updateBlock);
   const addBlock = useDashboardStore((s) => s.addBlock);
@@ -441,9 +443,6 @@ export function BlockNode({
       case "flowchart":
         return <FlowchartMiniContent block={block} boardId={boardId} />;
 
-      case "hostly":
-        return <HostlyMiniContent block={block} />;
-
       case "board-list":
         return <BoardListContent block={block} boardId={boardId} />;
 
@@ -471,13 +470,17 @@ export function BlockNode({
       <div
         onContextMenu={handleHeaderContextMenu}
         className="flex items-center gap-1.5 px-2.5 py-1.5"
-        title="Нажмите ПКМ для меню блока"
+        title={t("block.hint.contextMenu", language)}
       >
         <button
           type="button"
           onClick={() => toggleCollapse(block.id, boardId)}
           className="text-slate-500 hover:text-slate-300"
-          title={collapsed ? "Развернуть блок" : "Свернуть блок"}
+          title={
+  collapsed
+    ? t("block.hint.expand", language)
+    : t("block.hint.collapse", language)
+}
         >
           {collapsed ? (
             <ChevronRight size={12} />
@@ -519,16 +522,18 @@ export function BlockNode({
           <h3
             onDoubleClick={() => setEditingTitle(true)}
             className="flex-1 cursor-text truncate text-xs font-semibold text-slate-100"
-            title="Двойной клик — переименовать"
+            title={t("block.hint.rename", language)}
           >
             {block.title}
           </h3>
         )}
 
         <span className="hidden text-[9px] uppercase tracking-wide text-slate-500 sm:inline">
-          {block.children.length > 0 &&
-            `${block.children.length} вложен.`}
-        </span>
+  {block.children.length > 0 &&
+    t("block.nestedCount", language, {
+      count: block.children.length,
+    })}
+</span>
       </div>
 
       {!collapsed && (

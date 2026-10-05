@@ -1,22 +1,36 @@
 import { LayoutDashboard, FolderTree, Settings, Search, Command } from "lucide-react";
-import { useDashboardStore, type Page } from "../../store/dashboardStore";
+import { useDashboardStore } from "../../store/dashboardStore";
 import logoIcon from "../../assets/logo-icon.png";
 import logoMain from "../../assets/logo-main.png";
 import logoSub from "../../assets/logo-sub.png";
 import { ToiletBreakTimer } from "../ToiletBreakTimer";
 import { CalendarWidget } from "../CalendarWidget";
-
-const NAV_ITEMS: { page: Page; label: string; icon: typeof LayoutDashboard }[] = [
-  { page: { name: "dashboard" }, label: "Дашборд", icon: LayoutDashboard },
-  { page: { name: "files" }, label: "Файлы vault", icon: FolderTree },
-  { page: { name: "settings" }, label: "Настройки", icon: Settings },
-];
+import { t } from "../../i18n";
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const currentPage = useDashboardStore((s) => s.page);
   const navigate = useDashboardStore((s) => s.navigate);
   const setCommandPaletteOpen = useDashboardStore((s) => s.setCommandPaletteOpen);
   const customLogo = useDashboardStore((s) => s.customLogo);
+  const language = useDashboardStore((s) => s.language);
+
+  const navItems = [
+    {
+      page: { name: "dashboard" as const },
+      label: t("sidebar.dashboard", language),
+      icon: LayoutDashboard,
+    },
+    {
+      page: { name: "files" as const },
+      label: t("sidebar.files", language),
+      icon: FolderTree,
+    },
+    {
+      page: { name: "settings" as const },
+      label: t("sidebar.settings", language),
+      icon: Settings,
+    },
+  ];
 
   return (
     <aside
@@ -128,7 +142,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           }}
         >
           <Search size={14} />
-          <span className="flex-1 text-left">Быстрый поиск...</span>
+          <span className="flex-1 text-left">{t("sidebar.search", language)}</span>
           <span
             className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px]"
             style={{
@@ -142,7 +156,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       </div>
 
       <nav className="mt-3 space-y-1 px-3">
-        {NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const isActive = currentPage.name === item.page.name;
           return (
             <button
@@ -155,8 +169,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               style={
                 isActive
                   ? {
-                      background:
-                        "color-mix(in srgb, var(--nd-accent) 14%, transparent)",
+                      background: "color-mix(in srgb, var(--nd-accent) 14%, transparent)",
                       color: "var(--nd-accent)",
                       boxShadow: "inset 0 0 0 1px var(--nd-accent)",
                     }
@@ -186,7 +199,6 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
       <ToiletBreakTimer />
       <CalendarWidget />
-
     </aside>
   );
 }

@@ -17,17 +17,18 @@ import { DEFAULT_THEME, type ThemeId, type DashboardTheme } from "../utils/theme
 import { loadCustomThemes } from "../utils/themeLoader";
 import { buildVaultTree, readFileContent, writeFileContent } from "../adapters/vaultAdapter";
 import { obsidianStorage } from "../adapters/persistAdapter";
+import { t, DEFAULT_LANGUAGE, type LanguageId } from "../i18n";
 
-const BLOCK_LABELS: Record<BlockType, string> = {
-  group: "Группа",
-  note: "Заметка",
-  "file-list": "Файлы",
-  flowchart: "Доска",
-  link: "Ссылка",
-  graph: "Граф связей",
-  checklist: "Чек-лист",
-  "board-list": "Список страниц",
-};
+export function getBlockLabel(type: BlockType, lang?: LanguageId): string {
+  const language = lang ?? useDashboardStore.getState().language;
+  return t("block." + type, language);
+}
+
+const BLOCK_LABELS = new Proxy({} as Record<BlockType, string>, {
+  get(_target, prop: string) {
+    return getBlockLabel(prop as BlockType);
+  },
+});
 
 export { BLOCK_LABELS };
 
@@ -53,12 +54,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function makeDashboardBackupFileName(): string {
-  const stamp = new Date()
-    .toISOString()
-    .slice(0, 19)
-    .replace(/[T:]/g, "-");
-
-  return `nexus-dashboard-backup-${stamp}.json`;
+  const stamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, "-");
+  return "nexus-dashboard-backup-" + stamp + ".json";
 }
 
 function parseDashboardBackup(input: unknown): DashboardBackupData | null {
@@ -75,14 +72,9 @@ function parseDashboardBackup(input: unknown): DashboardBackupData | null {
     : DEFAULT_BACKGROUND;
 
   const theme =
-    typeof maybeData.theme === "string"
-      ? (maybeData.theme as ThemeId)
-      : DEFAULT_THEME;
+    typeof maybeData.theme === "string" ? (maybeData.theme as ThemeId) : DEFAULT_THEME;
 
-  const customLogo =
-    typeof maybeData.customLogo === "string"
-      ? maybeData.customLogo
-      : null;
+  const customLogo = typeof maybeData.customLogo === "string" ? maybeData.customLogo : null;
 
   return {
     blocks: maybeData.blocks as Block[],
@@ -101,22 +93,20 @@ export type Page =
   | { name: "files" }
   | { name: "settings" };
 
-function makeBlock(type: BlockType, title?: string): Block {
+function makeBlock(type: BlockType, lang: LanguageId, title?: string): Block {
   const base: Block = {
     id: uuid(),
     type,
-    title: title ?? BLOCK_LABELS[type],
+    title: title ?? getBlockLabel(type, lang),
     accent: "cyan",
     data: {},
     children: [],
   };
-  if (type === "note") base.data.markdown = "Новая заметка...";
+  if (type === "note") base.data.markdown = t("store.newNote", lang);
   if (type === "checklist") base.data.items = [];
   if (type === "file-list") base.data.fileIds = [];
   if (type === "board-list") base.data.boardIds = [];
-  if (type === "link") {
-    base.data.links = [];
-  }
+  if (type === "link") base.data.links = [];
   return base;
 }
 
@@ -146,6 +136,8 @@ function removeFromTree(blocks: Block[], id: string): Block[] {
 interface DashboardState {
   app: App | null;
   setApp: (app: App) => void;
+  language: LanguageId;
+  setLanguage: (language: LanguageId) => void;
   background: BackgroundSettings;
   setBackground: (patch: Partial<BackgroundSettings>) => void;
   resetBackground: () => void;
@@ -165,41 +157,32 @@ interface DashboardState {
   downloadBackup: () => void;
   importBackup: (backup: unknown) => boolean;
   importBackupFromFile: (file: File) => Promise<void>;
-
   boards: Record<string, Board>;
   createBoard: (title: string) => string;
   renameBoard: (boardId: string, title: string) => void;
-
   vault: VaultFile[];
   vaultLoaded: boolean;
   refreshVault: () => void;
   deleteFile: (path: string) => Promise<void>;
-
   fileContents: Record<string, string>;
   loadFileContent: (path: string) => Promise<string>;
   updateFileContent: (path: string, content: string) => Promise<void>;
-
   flowchartCache: Record<string, FlowchartDoc>;
   loadFlowchart: (path: string) => Promise<FlowchartDoc>;
   saveFlowchart: (path: string, doc: FlowchartDoc) => Promise<void>;
   createFlowchartFile: (name: string) => Promise<string>;
-
   customLogo: string | null;
   setCustomLogo: (logo: string | null) => void;
   clearCustomLogo: () => void;
-
   toasts: ToastItem[];
   pushToast: (kind: ToastKind, title: string, message?: string) => void;
   dismissToast: (id: string) => void;
-
   commandPaletteOpen: boolean;
   setCommandPaletteOpen: (open: boolean) => void;
-
   page: Page;
   history: Page[];
   navigate: (page: Page) => void;
   goBack: () => void;
-
   launchProgram: (file: VaultFile) => void;
   revealInExplorer: (file: VaultFile) => void;
   openInObsidian: (file: VaultFile) => void;
@@ -213,6 +196,10 @@ export const useDashboardStore = create<DashboardState>()(
         set({ app });
         void get().reloadThemes();
       },
+
+      language: DEFAULT_LANGUAGE,
+      setLanguage: (language) => set({ language }),
+
       background: DEFAULT_BACKGROUND,
 
       setBackground: (patch) => {
@@ -245,17 +232,18 @@ export const useDashboardStore = create<DashboardState>()(
         try {
           const list = await loadCustomThemes(app);
           set({ customThemes: list, themesLoading: false });
-          console.log("[Matreshka] Темы загружены:", list.map((t) => t.id));
+          console.log("[Matreshka] Themes loaded:", list.map((item) => item.id));
         } catch (e) {
           set({ themesLoading: false });
-          console.warn("[Matreshka] Ошибка тем", e);
+          console.warn("[Matreshka] Themes error", e);
         }
       },
 
       blocks: [],
 
       addBlock: (parentId, type, title, boardId) => {
-        const block = makeBlock(type, title);
+        const lang = get().language;
+        const block = makeBlock(type, lang, title);
         if (!boardId) {
           set((s) => ({ blocks: insertChild(s.blocks, parentId, block) }));
         } else {
@@ -269,7 +257,11 @@ export const useDashboardStore = create<DashboardState>()(
             },
           }));
         }
-        get().pushToast("success", "Блок добавлен", `${BLOCK_LABELS[type]} создан`);
+        get().pushToast(
+          "success",
+          t("store.blockAdded.title", lang),
+          t("store.blockAdded.message", lang, { type: getBlockLabel(type, lang) })
+        );
         return block.id;
       },
 
@@ -348,116 +340,126 @@ export const useDashboardStore = create<DashboardState>()(
       },
 
       resetDashboard: () => {
+        const lang = get().language;
         set({ blocks: [] });
-        get().pushToast("info", "Дашборд очищен", "Все блоки удалены");
+        get().pushToast(
+          "info",
+          t("store.dashboardReset.title", lang),
+          t("store.dashboardReset.message", lang)
+        );
       },
 
-exportBackup: () => {
-  const state = get();
+      exportBackup: () => {
+        const state = get();
+        return {
+          app: "nexus-dashboard",
+          version: DASHBOARD_BACKUP_VERSION,
+          createdAt: new Date().toISOString(),
+          data: {
+            blocks: state.blocks,
+            boards: state.boards,
+            background: state.background,
+            theme: state.theme,
+            customLogo: state.customLogo,
+          },
+        };
+      },
 
-  return {
-    app: "nexus-dashboard",
-    version: DASHBOARD_BACKUP_VERSION,
-    createdAt: new Date().toISOString(),
-    data: {
-      blocks: state.blocks,
-      boards: state.boards,
-      background: state.background,
-      theme: state.theme,
-      customLogo: state.customLogo,
-    },
-  };
-},
+      downloadBackup: () => {
+        const lang = get().language;
+        try {
+          const backup = get().exportBackup();
+          const json = JSON.stringify(backup, null, 2);
+          const blob = new Blob([json], {
+            type: "application/json;charset=utf-8",
+          });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = makeDashboardBackupFileName();
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+          get().pushToast("success", t("store.backupCreated", lang), link.download);
+        } catch (error) {
+          get().pushToast(
+            "error",
+            t("store.backupCreateFailed", lang),
+            error instanceof Error ? error.message : String(error)
+          );
+        }
+      },
 
-downloadBackup: () => {
-  try {
-    const backup = get().exportBackup();
-    const json = JSON.stringify(backup, null, 2);
+      importBackup: (backup) => {
+        const lang = get().language;
+        const data = parseDashboardBackup(backup);
 
-    const blob = new Blob([json], {
-      type: "application/json;charset=utf-8",
-    });
+        if (!data) {
+          get().pushToast(
+            "error",
+            t("store.backupInvalid.title", lang),
+            t("store.backupInvalid.message", lang)
+          );
+          return false;
+        }
 
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
+        set({
+          blocks: data.blocks,
+          boards: data.boards,
+          background: data.background,
+          theme: data.theme,
+          customLogo: data.customLogo,
+          page: { name: "dashboard" },
+          history: [],
+        });
 
-    link.href = url;
-    link.download = makeDashboardBackupFileName();
+        get().pushToast(
+          "success",
+          t("store.backupRestored.title", lang),
+          t("store.backupRestored.message", lang)
+        );
 
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+        return true;
+      },
 
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-
-    get().pushToast("success", "Бэкап создан", link.download);
-  } catch (error) {
-    get().pushToast(
-      "error",
-      "Не удалось создать бэкап",
-      error instanceof Error ? error.message : String(error)
-    );
-  }
-},
-
-importBackup: (backup) => {
-  const data = parseDashboardBackup(backup);
-
-  if (!data) {
-    get().pushToast(
-      "error",
-      "Некорректный JSON",
-      "Файл не похож на бэкап Matreshka"
-    );
-    return false;
-  }
-
-  set({
-    blocks: data.blocks,
-    boards: data.boards,
-    background: data.background,
-    theme: data.theme,
-    customLogo: data.customLogo,
-    page: { name: "dashboard" },
-    history: [],
-  });
-
-  get().pushToast(
-    "success",
-    "Дашборд восстановлен",
-    "Блоки, страницы, фон, тема и логотип загружены"
-  );
-
-  return true;
-},
-
-importBackupFromFile: async (file) => {
-  try {
-    const text = await file.text();
-    const backup = JSON.parse(text);
-
-    get().importBackup(backup);
-  } catch (error) {
-    get().pushToast(
-      "error",
-      "Не удалось загрузить бэкап",
-      error instanceof Error ? error.message : String(error)
-    );
-  }
-},
+      importBackupFromFile: async (file) => {
+        const lang = get().language;
+        try {
+          const text = await file.text();
+          const backup = JSON.parse(text);
+          get().importBackup(backup);
+        } catch (error) {
+          get().pushToast(
+            "error",
+            t("store.backupLoadFailed", lang),
+            error instanceof Error ? error.message : String(error)
+          );
+        }
+      },
 
       boards: {},
 
       createBoard: (title) => {
         const id = uuid();
-        const board: Board = { id, title: title.trim() || "Без названия", blocks: [] };
+        const board: Board = {
+          id,
+          title: title.trim() || t("store.untitled", get().language),
+          blocks: [],
+        };
         set((s) => ({ boards: { ...s.boards, [id]: board } }));
         return id;
       },
 
       renameBoard: (boardId, title) => {
         set((s) => ({
-          boards: { ...s.boards, [boardId]: { ...s.boards[boardId], title: title || "Без названия" } },
+          boards: {
+            ...s.boards,
+            [boardId]: {
+              ...s.boards[boardId],
+              title: title || t("store.untitled", get().language),
+            },
+          },
         }));
       },
 
@@ -471,13 +473,14 @@ importBackupFromFile: async (file) => {
       },
 
       deleteFile: async (path) => {
+        const lang = get().language;
         const app = get().app;
 
         if (!app) {
           get().pushToast(
             "error",
-            "Ошибка удаления",
-            "Приложение Obsidian ещё не подключено"
+            t("store.deleteError", lang),
+            t("store.obsidianNotConnected", lang)
           );
           return;
         }
@@ -485,7 +488,7 @@ importBackupFromFile: async (file) => {
         const target = app.vault.getAbstractFileByPath(path);
 
         if (!target) {
-          get().pushToast("error", "Файл не найден", path);
+          get().pushToast("error", t("store.fileNotFound", lang), path);
           return;
         }
 
@@ -503,30 +506,17 @@ importBackupFromFile: async (file) => {
           set((state) => {
             const fileContents = { ...state.fileContents };
             const flowchartCache = { ...state.flowchartCache };
-            
-
             delete fileContents[path];
             delete flowchartCache[path];
-            
-
-            return {
-              fileContents,
-              flowchartCache,
-              
-            };
+            return { fileContents, flowchartCache };
           });
 
           get().refreshVault();
-
-          get().pushToast(
-            "success",
-            "Файл удалён",
-            fileName
-          );
+          get().pushToast("success", t("store.fileDeleted", lang), fileName);
         } catch (error) {
           get().pushToast(
             "error",
-            "Не удалось удалить файл",
+            t("store.fileDeleteFailed", lang),
             error instanceof Error ? error.message : String(error)
           );
         }
@@ -574,27 +564,26 @@ importBackupFromFile: async (file) => {
       },
 
       createFlowchartFile: async (name) => {
+        const lang = get().language;
         const app = get().app;
         if (!app) return "";
-        let fileName = name.trim() || "Новая схема";
+        let fileName = name.trim() || t("store.newFlowchart", lang);
         if (!fileName.toLowerCase().endsWith(".flow")) fileName += ".flow";
         const existing = app.vault.getAbstractFileByPath(fileName);
         if (existing) {
-          get().pushToast("warning", "Файл уже существует", fileName);
+          get().pushToast("warning", t("store.fileExists", lang), fileName);
           return fileName;
         }
         const doc: FlowchartDoc = { id: fileName, name: fileName, nodes: [], edges: [] };
         await writeFileContent(app, fileName, JSON.stringify(doc, null, 2));
         set((s) => ({ flowchartCache: { ...s.flowchartCache, [fileName]: doc } }));
         get().refreshVault();
-        get().pushToast("success", "Схема создана", fileName);
+        get().pushToast("success", t("store.flowchartCreated", lang), fileName);
         return fileName;
       },
 
       customLogo: null,
-
       setCustomLogo: (logo) => set({ customLogo: logo }),
-
       clearCustomLogo: () => set({ customLogo: null }),
 
       toasts: [],
@@ -606,7 +595,7 @@ importBackupFromFile: async (file) => {
       },
 
       dismissToast: (id) => {
-        set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }));
+        set((s) => ({ toasts: s.toasts.filter((item) => item.id !== id) }));
       },
 
       commandPaletteOpen: false,
@@ -630,10 +619,15 @@ importBackupFromFile: async (file) => {
       },
 
       launchProgram: (file) => {
+        const lang = get().language;
         const app = get().app;
 
         if (!app) {
-          get().pushToast("error", "Ошибка запуска", "Obsidian не подключён");
+          get().pushToast(
+            "error",
+            t("store.launchError", lang),
+            t("store.obsidianNotConnectedShort", lang)
+          );
           return;
         }
 
@@ -646,8 +640,8 @@ importBackupFromFile: async (file) => {
           if (!shell?.openPath) {
             get().pushToast(
               "warning",
-              "Недоступно",
-              "Запуск программ работает только в десктопной версии Obsidian"
+              t("store.unavailable", lang),
+              t("store.launchDesktopOnly", lang)
             );
             return;
           }
@@ -658,30 +652,39 @@ importBackupFromFile: async (file) => {
             result
               .then((err: string) => {
                 if (err) {
-                  get().pushToast("error", "Не удалось запустить", err);
+                  get().pushToast("error", t("store.launchFailed", lang), err);
                 } else {
-                  get().pushToast("success", `Запуск: ${file.name}`, fullPath);
+                  get().pushToast(
+                    "success",
+                    t("store.launching", lang, { name: file.name }),
+                    fullPath
+                  );
                 }
               })
               .catch((e: Error) => {
-                get().pushToast("error", "Ошибка запуска", e.message);
+                get().pushToast("error", t("store.launchError", lang), e.message);
               });
           } else {
-            get().pushToast("success", `Запуск: ${file.name}`, fullPath);
+            get().pushToast(
+              "success",
+              t("store.launching", lang, { name: file.name }),
+              fullPath
+            );
           }
         } catch (e) {
-          get().pushToast("error", "Ошибка запуска", String(e));
+          get().pushToast("error", t("store.launchError", lang), String(e));
         }
       },
 
       revealInExplorer: (file) => {
+        const lang = get().language;
         const app = get().app;
 
         if (!app) {
           get().pushToast(
             "error",
-            "Не удалось открыть проводник",
-            "Приложение Obsidian ещё не подключено"
+            t("store.explorerFailed", lang),
+            t("store.obsidianNotConnected", lang)
           );
           return;
         }
@@ -693,8 +696,8 @@ importBackupFromFile: async (file) => {
           if (!fullPath) {
             get().pushToast(
               "warning",
-              "Функция недоступна",
-              "Показать файл в проводнике можно только в десктопной версии Obsidian"
+              t("store.featureUnavailable", lang),
+              t("store.explorerDesktopOnly", lang)
             );
             return;
           }
@@ -709,24 +712,21 @@ importBackupFromFile: async (file) => {
 
           if (shell?.openPath) {
             const pathModule = (window as any).require?.("path");
-
             const folderPath =
-              pathModule?.dirname?.(fullPath) ??
-              fullPath.replace(/[\\/][^\\/]+$/, "");
-
+              pathModule?.dirname?.(fullPath) ?? fullPath.replace(/[\\/][^\\/]+$/, "");
             void shell.openPath(folderPath);
             return;
           }
 
           get().pushToast(
             "warning",
-            "Функция недоступна",
-            "Показать файл в проводнике можно только в десктопной версии Obsidian"
+            t("store.featureUnavailable", lang),
+            t("store.explorerDesktopOnly", lang)
           );
         } catch (error) {
           get().pushToast(
             "error",
-            "Не удалось открыть проводник",
+            t("store.explorerFailed", lang),
             error instanceof Error ? error.message : String(error)
           );
         }
@@ -735,10 +735,9 @@ importBackupFromFile: async (file) => {
       openInObsidian: (file) => {
         const app = get().app;
         app?.workspace.openLinkText(file.path, "", true);
-        get().pushToast("success", "Открыто в Obsidian", file.name);
+        get().pushToast("success", t("store.openedInObsidian", get().language), file.name);
       },
     }),
-
     {
       name: "nexus-dashboard-store",
       storage: createJSONStorage(() => obsidianStorage),
@@ -749,6 +748,7 @@ importBackupFromFile: async (file) => {
         background: s.background,
         theme: s.theme,
         customLogo: s.customLogo,
+        language: s.language,
       }),
     }
   )

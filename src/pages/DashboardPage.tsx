@@ -5,6 +5,7 @@ import {
 import { useDashboardStore } from "../store/dashboardStore";
 import { BlockNode } from "../components/blocks/BlockNode";
 import { AddBlockContextMenu } from "../components/blocks/AddBlockMenu";
+import { t } from "../i18n";
 
 type ContextMenuState = {
   open: boolean;
@@ -15,6 +16,7 @@ type ContextMenuState = {
 export default function DashboardPage() {
   const blocks = useDashboardStore((s) => s.blocks);
   const addBlock = useDashboardStore((s) => s.addBlock);
+  const language = useDashboardStore((s) => s.language);
 
   const [contextMenu, setContextMenu] =
     useState<ContextMenuState>({
@@ -84,11 +86,10 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="flex min-h-[300px] flex-col items-center justify-center rounded-xl border border-dashed border-white/10 text-slate-500">
-            <p className="mb-2 text-sm">Дашборд пуст</p>
+            <p className="mb-2 text-sm">{t("dashboard.empty.title", language)}</p>
 
             <p className="text-[11px] text-slate-600">
-              Нажмите правой кнопкой мыши на свободном месте,
-              чтобы добавить блок.
+              {t("dashboard.empty.subtitle", language)}
             </p>
           </div>
         )}
