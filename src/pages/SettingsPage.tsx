@@ -18,8 +18,8 @@ import {
   saveBackgroundFile,
   ImageSuggestModal,
 } from "../utils/background";
-import { type DashboardTheme } from "../utils/themes";
-import { THEMES_FOLDER, createThemeTemplate } from "../utils/themeLoader";
+import { DEFAULT_THEME, getTheme } from "../utils/themes";
+import { THEMES_FOLDER } from "../utils/themeLoader";
 import { t, LANGUAGES } from "../i18n";
 import { confirmDialog } from "../components/ConfirmDialog";
 
@@ -403,48 +403,13 @@ function BackgroundSection() {
   );
 }
 
-/* ---------- Тема ---------- */
-
-function ThemeCard({
-  item,
-  selected,
-  onSelect,
-}: {
-  item: DashboardTheme;
-  selected: boolean;
-  onSelect: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      title={item.source ?? item.id}
-      className={`rounded-xl p-2.5 text-left transition ring-1 ${
-        selected
-          ? "bg-cyan-400/10 ring-cyan-400/50"
-          : "bg-white/[0.02] ring-white/10 hover:bg-white/[0.04]"
-      }`}
-    >
-      <div className="mb-2 flex h-10 overflow-hidden rounded-md">
-        {item.preview.map((color, i) => (
-          <span key={i} className="flex-1" style={{ backgroundColor: color }} />
-        ))}
-      </div>
-      <div className="truncate text-[11px] font-medium text-slate-200">{item.label}</div>
-      <div className="mt-0.5 truncate text-[10px] text-slate-500">{item.description}</div>
-    </button>
-  );
-}
-
 function ThemeSection() {
-  const app = useDashboardStore((s) => s.app);
   const theme = useDashboardStore((s) => s.theme);
   const setTheme = useDashboardStore((s) => s.setTheme);
   const customThemes = useDashboardStore((s) => s.customThemes);
   const themesLoading = useDashboardStore((s) => s.themesLoading);
   const reloadThemes = useDashboardStore((s) => s.reloadThemes);
   const pushToast = useDashboardStore((s) => s.pushToast);
-  const refreshVault = useDashboardStore((s) => s.refreshVault);
   const language = useDashboardStore((s) => s.language);
 
   async function handleReload() {
@@ -453,21 +418,15 @@ function ThemeSection() {
     pushToast("success", t("settings.theme.reloaded", language, { count }));
   }
 
-  async function handleTemplate() {
-    if (!app) return pushToast("error", t("settings.theme.obsidianError", language));
-    try {
-      const path = await createThemeTemplate(app);
-      await reloadThemes();
-      refreshVault();
-      pushToast("success", t("settings.theme.templateCreated", language), path);
-    } catch (e) {
-      pushToast(
-        "error",
-        t("settings.theme.templateFailed", language),
-        e instanceof Error ? e.message : String(e)
-      );
-    }
+  function handleResetTheme() {
+    setTheme(DEFAULT_THEME);
+    pushToast("success", t("settings.theme.resetDone", language));
   }
+
+  const selectedCustom = customThemes.some((th) => th.id === theme) ? theme : "";
+  // Хочешь чтобы в списке писало "eink-paper" - оставь DEFAULT_THEME
+  // Хочешь чтобы писало "Ink Paper" - замени на getTheme(DEFAULT_THEME).label
+  const defaultLabel = getTheme(DEFAULT_THEME).label;
 
   return (
     <section className="glass-panel rounded-xl p-5">
@@ -489,32 +448,40 @@ function ThemeSection() {
           <RefreshCw size={13} className={themesLoading ? "animate-spin" : ""} />{" "}
           {t("settings.theme.reload", language)}
         </button>
+
         <button
-          onClick={handleTemplate}
-          className="flex items-center gap-1.5 rounded-md bg-cyan-400/15 px-3 py-2 text-xs font-medium text-cyan-300 hover:bg-cyan-400/25"
+          onClick={handleResetTheme}
+          className="flex items-center gap-1.5 rounded-md border border-rose-400/20 bg-rose-400/5 px-3 py-2 text-xs font-medium text-rose-300 hover:bg-rose-400/15"
         >
-          <FolderOpen size={13} /> {t("settings.theme.createTemplate", language)}
+          <RotateCcw size={13} /> {t("settings.theme.reset", language)}
         </button>
       </div>
 
       <div className="mb-2 text-[11px] uppercase tracking-wide text-slate-500">
         {t("settings.theme.custom", language, { count: customThemes.length })}
       </div>
+
       {customThemes.length === 0 ? (
         <div className="rounded-md bg-white/[0.02] px-3 py-3 text-[11px] text-slate-500">
           {t("settings.theme.empty", language, { folder: THEMES_FOLDER })}
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {customThemes.map((item) => (
-            <ThemeCard
-              key={item.source ?? item.id}
-              item={item}
-              selected={theme === item.id}
-              onSelect={() => setTheme(item.id)}
-            />
+        <select
+          value={selectedCustom}
+          onChange={(e) => {
+            if (e.target.value) setTheme(e.target.value);
+          }}
+          className="w-full rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-slate-200 outline-none focus:border-cyan-400/40"
+        >
+          <option value="" disabled>
+            {defaultLabel}
+          </option>
+          {customThemes.map((th) => (
+            <option key={th.source ?? th.id} value={th.id}>
+              {th.label}
+            </option>
           ))}
-        </div>
+        </select>
       )}
     </section>
   );
@@ -651,59 +618,80 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-6">
+        <div className="mx-auto max-w-6xl px-6 py-6">
       <div className="mb-6 flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-400/10 ring-1 ring-cyan-400/20">
           <Settings2 size={18} className="text-cyan-300" />
         </div>
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-100">
-            {t("settings.title", language)}
-          </h1>
-        </div>
+
+        <h1 className="text-xl font-bold tracking-tight text-slate-100">
+          {t("settings.title", language)}
+        </h1>
       </div>
 
-      <div className="space-y-4">
-        <LanguageSection />
-
-        <section className="glass-panel rounded-xl p-5">
-          <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-100">
-            <RefreshCw size={15} className="text-cyan-300" />{" "}
-            {t("settings.vault.title", language)}
+      <div
+  className="grid gap-5"
+  style={{ gridTemplateColumns: "repeat(auto-fit, minmax(430px, 1fr))" }}
+>
+        {/* ---------- Левая колонка: Системные ---------- */}
+        <div className="space-y-4">
+          <h2 className="px-1 text-sm font-semibold text-slate-300">
+            {t("settings.section.system", language)}
           </h2>
-          <p className="mb-3 text-xs leading-relaxed text-slate-400">
-            {t("settings.vault.description", language, { count: vault.length })}
-          </p>
-          <button
-            onClick={manualRefresh}
-            className="flex items-center gap-1.5 rounded-md bg-cyan-400/15 px-3.5 py-2 text-xs font-medium text-cyan-300 hover:bg-cyan-400/25"
-          >
-            <RefreshCw size={13} /> {t("settings.vault.refresh", language)}
-          </button>
-        </section>
 
-        <LogoSection />
-        <BackgroundSection />
-        <ThemeSection />
-        <BackupSection />
+          <LanguageSection />
 
-        <section className="glass-panel rounded-xl p-5">
-          <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-100">
-            <Palette size={15} className="text-violet-300" />{" "}
-            {t("settings.dashboard.title", language)}
-          </h2>
-          <div className="flex items-center justify-between rounded-md bg-white/[0.02] px-3 py-2">
-            <span className="text-xs text-slate-300">
-              {t("settings.dashboard.reset", language)}
-            </span>
+          <section className="glass-panel rounded-xl p-5">
+            <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-100">
+              <RefreshCw size={15} className="text-cyan-300" />{" "}
+              {t("settings.vault.title", language)}
+            </h2>
+
+            <p className="mb-3 text-xs leading-relaxed text-slate-400">
+              {t("settings.vault.description", language, { count: vault.length })}
+            </p>
+
             <button
-              onClick={handleReset}
-              className="flex items-center gap-1.5 rounded-md border border-rose-400/20 bg-rose-400/5 px-2.5 py-1 text-[11px] text-rose-300 hover:bg-rose-400/15"
+              onClick={manualRefresh}
+              className="flex items-center gap-1.5 rounded-md bg-cyan-400/15 px-3.5 py-2 text-xs font-medium text-cyan-300 hover:bg-cyan-400/25"
             >
-              <Trash2 size={12} /> {t("settings.dashboard.clear", language)}
+              <RefreshCw size={13} /> {t("settings.vault.refresh", language)}
             </button>
-          </div>
-        </section>
+          </section>
+
+          <BackupSection />
+
+          <section className="glass-panel rounded-xl p-5">
+            <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-100">
+              <Palette size={15} className="text-violet-300" />{" "}
+              {t("settings.dashboard.title", language)}
+            </h2>
+
+            <div className="flex items-center justify-between gap-3 rounded-md bg-white/[0.02] px-3 py-2">
+              <span className="text-xs text-slate-300">
+                {t("settings.dashboard.reset", language)}
+              </span>
+
+              <button
+                onClick={handleReset}
+                className="shrink-0 flex items-center gap-1.5 rounded-md border border-rose-400/20 bg-rose-400/5 px-2.5 py-1 text-[11px] text-rose-300 hover:bg-rose-400/15"
+              >
+                <Trash2 size={12} /> {t("settings.dashboard.clear", language)}
+              </button>
+            </div>
+          </section>
+        </div>
+
+        {/* ---------- Правая колонка: Оформление ---------- */}
+        <div className="space-y-4">
+          <h2 className="px-1 text-sm font-semibold text-slate-300">
+            {t("settings.section.appearance", language)}
+          </h2>
+
+          <LogoSection />
+          <BackgroundSection />
+          <ThemeSection />
+        </div>
       </div>
     </div>
   );

@@ -1,7 +1,8 @@
 import type { CSSProperties } from "react";
+import einkPaperRaw from "../data/themes/E-Ink.json";
 
 export type ThemeId = string;
-export const DEFAULT_THEME: ThemeId = "Lemo";
+export const DEFAULT_THEME: ThemeId = "eink-paper";
 
 export interface ThemeColors {
   bg: string;
@@ -137,7 +138,43 @@ function mk(
   };
 }
 
+const EINK_THEME: DashboardTheme =
+  normalizeTheme(einkPaperRaw, "eink-paper") ??
+  mk("eink-paper", "Ink Paper", "Электронная бумага", ["#eeeece", "#141414", "#5c5c5c", "#f7f6f1"], {
+    bg: "#eeeece",
+    bgSoft: "#e4e1d7",
+    text: "#141414",
+    textSecondary: "#262626",
+    textMuted: "#3f3f3f",
+    textFaint: "#5c5c5c",
+    panel: "#f7f6f1",
+    panelHover: "#fdfcf8",
+    panelBorder: "rgba(20, 20, 20, 0.62)",
+    accent: "#141414",
+    accentLight: "#2e2e2e",
+    accent2: "#4a4a4a",
+    accentText: "#f7f6f1",
+    grid: "rgba(20, 20, 20, 0.07)",
+    glow: "rgba(20, 20, 20, 0.16)",
+    scrollbar: "rgba(20, 20, 20, 0.32)",
+    miroPort: "#141414",
+    radial1: "rgba(0, 0, 0, 0)",
+    radial2: "rgba(0, 0, 0, 0)",
+  }, {
+    radius: "6px",
+    radiusSm: "4px",
+    blur: "0px",
+    shadow: "2px 2px 0 0 rgba(20, 20, 20, 0.85)",
+    font: '"Literata", "Bookerly", Georgia, "PT Serif", "Times New Roman", serif',
+    fontMono: '"JetBrains Mono", "IBM Plex Mono", Consolas, monospace',
+    borderWidth: "1px",
+    letterSpacing: "0.005em",
+    gridSize: "24px",
+  });
+
 export const THEME_LIST: DashboardTheme[] = [
+  EINK_THEME,
+
   mk("lemo", "Lemo", "Неоновая базовая", ["#05070a", "#22d3ee", "#a855f7", "#e6edf3"], {}),
 
   mk("techno-minimal", "Techno Minimal", "Фиолетовый минимал", ["#08090f", "#7c3aed", "#22d3ee", "#cbd5e1"], {
@@ -283,6 +320,7 @@ export function getTheme(themeId?: ThemeId | null, extra: DashboardTheme[] = [])
   return (
     extra.find((t) => t.id === themeId) ??
     THEME_LIST.find((t) => t.id === themeId) ??
+    THEME_LIST.find((t) => t.id === DEFAULT_THEME) ??
     THEME_LIST[0]
   );
 }

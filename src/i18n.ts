@@ -63,6 +63,8 @@ const ru: Record<string, string> = {
   
   // Общее и Настройки
   "settings.title": "Настройки",
+  "settings.section.system": "Системные",
+  "settings.section.appearance": "Оформление",
   "settings.vaultRefreshSuccess": "Дерево файлов синхронизировано",
 
   "settings.language.title": "Язык интерфейса",
@@ -113,13 +115,12 @@ const ru: Record<string, string> = {
   "settings.background.uploadFailed": "Не удалось загрузить фон",
 
   "settings.theme.title": "Тема оформления",
-  "settings.theme.description":
-    "Тема меняет цвета, скругления, тени и шрифты. Свои темы кладите в папку {folder} в виде .json файлов.",
+  "settings.theme.description": "Для добавления собственных тем создайте в корне Vault папку {folder}.",
   "settings.theme.reload": "Обновить темы",
-  "settings.theme.createTemplate": "Создать шаблон темы",
+  "settings.theme.reset": "Сбросить",
+  "settings.theme.resetDone": "Тема сброшена",
   "settings.theme.custom": "Пользовательские ({count})",
-  "settings.theme.empty":
-    "Пока пусто. Нажмите «Создать шаблон темы» или положите свой .json в папку {folder} и нажмите «Обновить темы».",
+  "settings.theme.empty": "Для добавления собственных тем создайте в корне папки Vault папку {folder}.",
   "settings.theme.reloaded": "Темы обновлены. Найдено пользовательских: {count}",
   "settings.theme.templateCreated": "Шаблон создан",
   "settings.theme.templateFailed": "Не удалось создать шаблон",
@@ -385,6 +386,8 @@ const en: Record<string, string> = {
 
   // Common & Settings
   "settings.title": "Settings",
+  "settings.section.system": "System",
+  "settings.section.appearance": "Appearance",
   "settings.vaultRefreshSuccess": "File tree synchronized",
 
   "settings.language.title": "Interface Language",
@@ -434,14 +437,15 @@ const en: Record<string, string> = {
   "settings.background.setFromUrl": "Background set from URL",
   "settings.background.uploadFailed": "Failed to upload background",
 
-  "settings.theme.title": "Theme",
+    "settings.theme.title": "Theme",
   "settings.theme.description":
-    "The theme changes colors, rounding, shadows, and fonts. Place your custom themes in the {folder} folder as .json files.",
+    "To add your own themes, create a {folder} folder in the root of your Vault.",
   "settings.theme.reload": "Reload themes",
-  "settings.theme.createTemplate": "Create theme template",
+  "settings.theme.reset": "Reset",
+  "settings.theme.resetDone": "Theme reset",
   "settings.theme.custom": "Custom ({count})",
   "settings.theme.empty":
-    'Empty. Click "Create theme template" or place your .json in the {folder} folder and click "Reload themes".',
+    "To add your own themes, create a {folder} folder in the root of your Vault.",
   "settings.theme.reloaded": "Themes reloaded. Found custom: {count}",
   "settings.theme.templateCreated": "Template created",
   "settings.theme.templateFailed": "Failed to create template",
