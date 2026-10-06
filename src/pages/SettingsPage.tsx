@@ -21,6 +21,7 @@ import {
 import { type DashboardTheme } from "../utils/themes";
 import { THEMES_FOLDER, createThemeTemplate } from "../utils/themeLoader";
 import { t, LANGUAGES } from "../i18n";
+import { confirmDialog } from "../components/ConfirmDialog";
 
 /* ---------- Toggle ---------- */
 
@@ -536,7 +537,14 @@ function BackupSection() {
     e.target.value = "";
     if (!file) return;
 
-    const ok = confirm(t("settings.backup.confirm", language));
+     const ok = await confirmDialog({
+      title: t("dialog.loadBackupTitle", language),
+      message: t("settings.backup.confirm", language),
+      confirmLabel: t("dialog.ok", language),
+      cancelLabel: t("dialog.cancel", language),
+      danger: false,
+    });
+
     if (!ok) return;
 
     setBusy(true);
@@ -628,8 +636,16 @@ export default function SettingsPage() {
     pushToast("success", t("settings.vaultRefreshSuccess", language));
   }
 
-  function handleReset() {
-    if (confirm(t("settings.dashboard.confirm", language))) {
+  async function handleReset() {
+    const confirmed = await confirmDialog({
+      title: t("dialog.deleteBlocksTitle", language),
+      message: t("settings.dashboard.confirm", language),
+      confirmLabel: t("settings.dashboard.clear", language),
+      cancelLabel: t("dialog.cancel", language),
+      danger: true,
+    });
+
+    if (confirmed) {
       resetDashboard();
     }
   }

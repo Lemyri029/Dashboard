@@ -17,6 +17,7 @@ import type { FileKind, VaultFile } from "../types";
 import { FileIcon } from "../components/FileIcon";
 import { VaultTree } from "../components/VaultTree";
 import { t } from "../i18n";
+import { confirmDialog } from "../components/ConfirmDialog";
 
 const ROOT_KEY = "__vault_root__";
 
@@ -178,10 +179,14 @@ function FileChip({ file }: { file: VaultFile }) {
     navigate({ name: "file", path: file.path });
   }
 
-  async function handleDelete() {
-    const confirmed = window.confirm(
-      t("files.deleteConfirm", language, { name: file.name })
-    );
+    async function handleDelete() {
+    const confirmed = await confirmDialog({
+      title: t("dialog.deleteFileTitle", language),
+      message: t("files.deleteConfirm", language, { name: file.name }),
+      confirmLabel: t("files.menu.delete", language),
+      cancelLabel: t("dialog.cancel", language),
+      danger: true,
+    });
 
     if (!confirmed) return;
 

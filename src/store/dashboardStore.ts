@@ -208,14 +208,14 @@ setApp: (app) => {
             ...patch,
           },
         }));
-        console.log("[Matreshka] Background updated:", get().background);
+        console.log("[Lemo] Background updated:", get().background);
       },
 
       resetBackground: () => {
         set({
           background: DEFAULT_BACKGROUND,
         });
-        console.log("[Matreshka] Background reset");
+        console.log("[Lemo] Background reset");
       },
 
       theme: DEFAULT_THEME,
@@ -231,10 +231,10 @@ setApp: (app) => {
         try {
           const list = await loadCustomThemes(app);
           set({ customThemes: list, themesLoading: false });
-          console.log("[Matreshka] Themes loaded:", list.map((item) => item.id));
+          console.log("[Lemo] Themes loaded:", list.map((item) => item.id));
         } catch (e) {
           set({ themesLoading: false });
-          console.warn("[Matreshka] Themes error", e);
+          console.warn("[Lemo] Themes error", e);
         }
       },
 

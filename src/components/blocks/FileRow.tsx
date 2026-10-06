@@ -12,6 +12,7 @@ import { FileIcon } from "../FileIcon";
 import { useDashboardStore } from "../../store/dashboardStore";
 import { getKindLabel } from "../../utils/vault";
 import { t } from "../../i18n";
+import { confirmDialog } from "../ConfirmDialog";
 
 /**
  * Расширения файлов, которые можно запускать
@@ -133,10 +134,14 @@ export function FileRow({
     });
   }
 
-  async function handleDelete() {
-    const confirmed = window.confirm(
-      t("files.deleteConfirm", language, { name: file.name })
-    );
+   async function handleDelete() {
+    const confirmed = await confirmDialog({
+      title: t("dialog.deleteFileTitle", language),
+      message: t("files.deleteConfirm", language, { name: file.name }),
+      confirmLabel: t("files.menu.delete", language),
+      cancelLabel: t("dialog.cancel", language),
+      danger: true,
+    });
 
     if (!confirmed) return;
 

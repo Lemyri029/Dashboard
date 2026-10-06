@@ -6,6 +6,7 @@ import FlowchartPage from "./pages/FlowchartPage";
 import SettingsPage from "./pages/SettingsPage";
 import BoardPage from "./pages/BoardPage";
 import { useDashboardStore } from "./store/dashboardStore";
+import { ConfirmHost } from "./components/ConfirmDialog";
 
 export default function App() {
   const page = useDashboardStore((s) => s.page);
@@ -29,5 +30,10 @@ export default function App() {
     }
   }
   
-  return <Layout>{renderPage()}</Layout>;
+  return (
+    <>
+      <Layout>{renderPage()}</Layout>
+      <ConfirmHost />
+    </>
+  );
 }

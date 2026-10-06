@@ -26,13 +26,13 @@ export async function loadCustomThemes(app: App): Promise<DashboardTheme[]> {
         const theme = normalizeTheme(parsed, fileId);
         if (theme) result.push({ ...theme, source: path });
       } catch (e) {
-        console.warn(`[Matreshka] Тема не прочитана: ${path}`, e);
+        console.warn(`[Lemo] Тема не прочитана: ${path}`, e);
       }
     }
 
     return result;
   } catch (e) {
-    console.warn("[Matreshka] Ошибка загрузки тем", e);
+    console.warn("[Lemo] Ошибка загрузки тем", e);
     return [];
   }
 }

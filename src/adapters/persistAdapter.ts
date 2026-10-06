@@ -18,7 +18,7 @@ export const obsidianStorage = {
   },
   setItem: async (name: string, value: string): Promise<void> => {
   if (!pluginRef) {
-    console.warn("[Matreshka] Storage unavailable: pluginRef is null");
+    console.warn("[Lemo] Storage unavailable: pluginRef is null");
     return;
   }
 
@@ -27,7 +27,7 @@ export const obsidianStorage = {
 
   data[name] = parsedValue;
 
-  console.log("[Matreshka] Saving persist data:", data[name]);
+  console.log("[Lemo] Saving persist data:", data[name]);
 
   await pluginRef.saveData(data);
 },

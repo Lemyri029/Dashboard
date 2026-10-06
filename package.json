@@ -7,8 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "css:watch": "npx @tailwindcss/cli -i src/index.css -o \"C:/Users/Lemyr/Desktop/Dashboard/Home/.obsidian/plugins/nexus-dashboard/styles.css\" --watch",
-    "css:build": "npx @tailwindcss/cli -i src/index.css -o \"C:/Users/Lemyr/Desktop/Dashboard/Home/.obsidian/plugins/nexus-dashboard/styles.css\" --minify"
+    "css:watch": "npx @tailwindcss/cli -i src/index.css -o \"C:/Users/Lemyr/Desktop/Dashboard/Home/.obsidian/plugins/Lemo/styles.css\" --watch",
+    "css:build": "npx @tailwindcss/cli -i src/index.css -o \"C:/Users/Lemyr/Desktop/Dashboard/Home/.obsidian/plugins/Lemo/styles.css\" --minify"
   },
   "dependencies": {
     "@types/uuid": "^10.0.0",

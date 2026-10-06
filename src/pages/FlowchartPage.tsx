@@ -20,6 +20,7 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { useDashboardStore } from "../store/dashboardStore";
+import { t as tr } from "../i18n";
 import type { FlowchartDoc } from "../types";
 import { v4 as uuid } from "uuid";
 
@@ -68,12 +69,13 @@ function defaultColor(t: BoardType) {
   if (t === "text") return "#e2e8f0";
   return "#38bdf8";
 }
-function defaultText(t: BoardType) {
-  if (t === "sticky") return "Стикер";
-  if (t === "text") return "Текст";
-  if (t === "ellipse") return "Овал";
-  if (t === "image") return "";
-  return "Блок";
+function defaultText(type: BoardType) {
+  const lang = useDashboardStore.getState().language;
+  if (type === "sticky") return tr("flow.default.sticky", lang);
+  if (type === "text") return tr("flow.default.text", lang);
+  if (type === "ellipse") return tr("flow.default.oval", lang);
+  if (type === "image") return "";
+  return tr("flow.default.block", lang);
 }
 function normalizeType(raw?: string): BoardType {
   if (raw === "sticky" || raw === "text" || raw === "rect" || raw === "ellipse" || raw === "image") return raw;
@@ -175,6 +177,7 @@ export default function FlowchartPage({ path }: { path: string }) {
   const loadFlowchart = useDashboardStore((s) => s.loadFlowchart);
   const saveFlowchart = useDashboardStore((s) => s.saveFlowchart);
   const pushToast = useDashboardStore((s) => s.pushToast);
+  const language = useDashboardStore((s) => s.language);
 
   const [doc, setDoc] = useState<FlowchartDoc | null>(null);
   const [loading, setLoading] = useState(true);
@@ -452,7 +455,7 @@ export default function FlowchartPage({ path }: { path: string }) {
     } as unknown as FlowchartDoc;
     await saveFlowchart(path, updated);
     setDirty(false);
-    if (manual) pushToast("success", "Доска сохранена", doc.name);
+        if (manual) pushToast("success", tr("flow.savedToast", language), doc.name);
   }
   function fitView() {
     const list = itemsRef.current;
@@ -762,12 +765,12 @@ export default function FlowchartPage({ path }: { path: string }) {
     return { ...base, background: "rgba(10,14,20,.94)", color: "#e6edf3", border: `2.5px solid ${it.color}`, borderRadius: 12, boxShadow: selected ? "0 0 0 2.5px #38e8ff" : "0 8px 26px -12px rgba(0,0,0,.7)" };
   }
 
-  if (loading) return <div className="flex h-full items-center justify-center text-sm text-slate-500" style={{ background: "#070a0f" }}>Загрузка доски...</div>;
+    if (loading) return <div className="flex h-full items-center justify-center text-sm text-slate-500" style={{ background: "#070a0f" }}>{tr("flow.loading", language)}</div>;
   if (!doc) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3 text-slate-500" style={{ background: "#070a0f" }}>
-        <p>Доска не найдена</p>
-        <button onClick={goBack} className="rounded-md border border-white/10 px-3 py-1.5 text-sm hover:text-slate-200">Назад</button>
+        <p>{tr("flow.notFound", language)}</p>
+        <button onClick={goBack} className="rounded-md border border-white/10 px-3 py-1.5 text-sm hover:text-slate-200">{tr("flow.back", language)}</button>
       </div>
     );
   }
@@ -781,14 +784,14 @@ export default function FlowchartPage({ path }: { path: string }) {
     height: Math.abs(marquee.y2 - marquee.y1) * zoom,
   } : null;
 
-  const tools: { id: Tool; icon: typeof Square; hint: string }[] = [
-    { id: "select", icon: MousePointer2, hint: "Выбор (V)" },
-    { id: "pan", icon: Hand, hint: "Рука (H)" },
-    { id: "sticky", icon: StickyNote, hint: "Стикер (S)" },
-    { id: "text", icon: Type, hint: "Текст (T)" },
-    { id: "rect", icon: Square, hint: "Прямоугольник (R)" },
-    { id: "ellipse", icon: Circle, hint: "Овал (O)" },
-    { id: "connect", icon: Share2, hint: "Связь (C)" },
+    const tools: { id: Tool; icon: typeof Square; hint: string }[] = [
+    { id: "select", icon: MousePointer2, hint: tr("flow.tool.select", language) },
+    { id: "pan", icon: Hand, hint: tr("flow.tool.pan", language) },
+    { id: "sticky", icon: StickyNote, hint: tr("flow.tool.sticky", language) },
+    { id: "text", icon: Type, hint: tr("flow.tool.text", language) },
+    { id: "rect", icon: Square, hint: tr("flow.tool.rect", language) },
+    { id: "ellipse", icon: Circle, hint: tr("flow.tool.ellipse", language) },
+    { id: "connect", icon: Share2, hint: tr("flow.tool.connect", language) },
   ];
 
   return (
@@ -796,15 +799,15 @@ export default function FlowchartPage({ path }: { path: string }) {
       {/* верхняя панель */}
       <div className="flex items-center gap-2 border-b border-white/5 bg-[#0a0e14] px-3 py-2">
         <button onClick={() => { if (dirty) saveBoard(false); goBack(); }} className="flex items-center gap-1 rounded-md border border-white/10 px-2 py-1 text-[11px] text-slate-400 hover:text-slate-100">
-          <ArrowLeft size={12} /> Назад
+        <ArrowLeft size={12} /> {tr("flow.back", language)}
         </button>
         <span className="text-sm font-semibold text-slate-100">{doc.name}</span>
-        <span className={`h-1.5 w-1.5 rounded-full ${dirty ? "bg-amber-400" : "bg-emerald-500"}`} title={dirty ? "Есть несохранённые изменения" : "Сохранено"} />
+        <span className={`h-1.5 w-1.5 rounded-full ${dirty ? "bg-amber-400" : "bg-emerald-500"}`} title={dirty ? tr("flow.unsaved", language) : tr("flow.saved", language)} />
         <div className="mx-1 h-4 w-px bg-white/10" />
-        <button onClick={undo} disabled={pastRef.current.length === 0} title="Отменить (Ctrl+Z)" className="rounded p-1.5 text-slate-400 hover:bg-white/5 hover:text-slate-100 disabled:opacity-30"><Undo2 size={14} /></button>
-        <button onClick={redo} disabled={futureRef.current.length === 0} title="Вернуть (Ctrl+Y)" className="rounded p-1.5 text-slate-400 hover:bg-white/5 hover:text-slate-100 disabled:opacity-30"><Redo2 size={14} /></button>
-        <button onClick={duplicateSelected} disabled={selectedIds.length === 0} title="Дублировать (Ctrl+D)" className="rounded p-1.5 text-slate-400 hover:bg-white/5 hover:text-slate-100 disabled:opacity-30"><Copy size={14} /></button>
-        <button onClick={deleteSelected} disabled={selectedIds.length === 0 && selectedEdgeIds.length === 0} title="Удалить (Del)" className="rounded p-1.5 text-slate-400 hover:bg-rose-400/10 hover:text-rose-300 disabled:opacity-30"><Trash2 size={14} /></button>
+        <button onClick={undo} disabled={pastRef.current.length === 0} title={tr("flow.undo", language)} className="rounded p-1.5 text-slate-400 hover:bg-white/5 hover:text-slate-100 disabled:opacity-30"><Undo2 size={14} /></button>
+        <button onClick={redo} disabled={futureRef.current.length === 0} title={tr("flow.redo", language)} className="rounded p-1.5 text-slate-400 hover:bg-white/5 hover:text-slate-100 disabled:opacity-30"><Redo2 size={14} /></button>
+        <button onClick={duplicateSelected} disabled={selectedIds.length === 0} title={tr("flow.duplicate", language)} className="rounded p-1.5 text-slate-400 hover:bg-white/5 hover:text-slate-100 disabled:opacity-30"><Copy size={14} /></button>
+        <button onClick={deleteSelected} disabled={selectedIds.length === 0 && selectedEdgeIds.length === 0} title={tr("flow.delete", language)} className="rounded p-1.5 text-slate-400 hover:bg-rose-400/10 hover:text-rose-300 disabled:opacity-30"><Trash2 size={14} /></button>
         {singleSelected && (
           <>
             <div className="mx-1 h-4 w-px bg-white/10" />
@@ -813,17 +816,18 @@ export default function FlowchartPage({ path }: { path: string }) {
                 <button key={c} onClick={() => { pushHistory(); setItems((p) => p.map((i) => (i.id === singleSelected.id ? { ...i, color: c } : i))); }} style={{ background: c }} className={`h-4 w-4 rounded-full border ${singleSelected.color === c ? "border-white" : "border-white/20"}`} />
               ))}
             </div>
-            <button onClick={() => { pushHistory(); setItems((p) => p.map((i) => (i.id === singleSelected.id ? { ...i, fontSize: Math.max(10, i.fontSize - 2) } : i))); }} title="Шрифт меньше" className="rounded px-1.5 py-0.5 text-[11px] text-slate-400 hover:bg-white/5">A-</button>
-            <button onClick={() => { pushHistory(); setItems((p) => p.map((i) => (i.id === singleSelected.id ? { ...i, fontSize: Math.min(64, i.fontSize + 2) } : i))); }} title="Шрифт больше" className="rounded px-1.5 py-0.5 text-[11px] text-slate-400 hover:bg-white/5">A+</button>
+            <button onClick={() => { pushHistory(); setItems((p) => p.map((i) => (i.id === singleSelected.id ? { ...i, fontSize: Math.max(10, i.fontSize - 2) } : i))); }} title={tr("flow.fontSmaller", language)} className="rounded px-1.5 py-0.5 text-[11px] text-slate-400 hover:bg-white/5">A-</button>
+            <button onClick={() => { pushHistory(); setItems((p) => p.map((i) => (i.id === singleSelected.id ? { ...i, fontSize: Math.min(64, i.fontSize + 2) } : i))); }} title={tr("flow.fontLarger", language)}
+ className="rounded px-1.5 py-0.5 text-[11px] text-slate-400 hover:bg-white/5">A+</button>
           </>
         )}
         <div className="ml-auto flex items-center gap-2">
           <span className="text-[10px] text-slate-500">{Math.round(zoom * 100)}%</span>
           <label className="flex cursor-pointer items-center gap-1 text-[10px] text-slate-500">
-            <input type="checkbox" checked={autoSave} onChange={(e) => setAutoSave(e.target.checked)} className="accent-cyan-400" /> автосейв
+          <input type="checkbox" checked={autoSave} onChange={(e) => setAutoSave(e.target.checked)} className="accent-cyan-400" /> {tr("flow.autosave", language)}
           </label>
           <button onClick={() => saveBoard(true)} className="flex items-center gap-1 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-1 text-[11px] font-medium text-cyan-300 hover:bg-cyan-400/20">
-            <Save size={12} /> Сохранить
+          <Save size={12} /> {tr("flow.save", language)}
           </button>
         </div>
       </div>
@@ -837,7 +841,7 @@ export default function FlowchartPage({ path }: { path: string }) {
             </button>
           ))}
           <div className="my-1 h-px w-6 bg-white/10" />
-          <button onClick={addImageFromFile} title="Изображение" className="rounded-lg p-2 text-slate-500 transition hover:bg-white/5 hover:text-slate-200">
+             <button onClick={addImageFromFile} title={tr("flow.image", language)} className="rounded-lg p-2 text-slate-500 transition hover:bg-white/5 hover:text-slate-200">
             <ImageIcon size={16} />
           </button>
         </div>
@@ -930,7 +934,7 @@ export default function FlowchartPage({ path }: { path: string }) {
                         style={{ width: "100%", height: "100%", objectFit: "contain", pointerEvents: "none", userSelect: "none", display: "block" }}
                       />
                     ) : (
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%", color: "#64748b", fontSize: 12 }}>Нет изображения</div>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%", color: "#64748b", fontSize: 12 }}>{tr("flow.noImage", language)}</div>
                     )
                   ) : (
                     <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>{it.text}</div>
@@ -953,8 +957,8 @@ export default function FlowchartPage({ path }: { path: string }) {
           {items.length === 0 && !loading && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
               <div className="max-w-xs rounded-xl border border-white/10 bg-black/50 p-5 text-center backdrop-blur">
-                <p className="mb-1 text-sm font-medium text-slate-200">Пустая доска</p>
-                <p className="text-[11px] leading-relaxed text-slate-500">Правая кнопка — создать элемент<br />Или выберите инструмент слева<br />Ctrl+колесо — масштаб</p>
+                  <p className="mb-1 text-sm font-medium text-slate-200">{tr("flow.empty.title", language)}</p>
+                <p className="whitespace-pre-line text-[11px] leading-relaxed text-slate-500">{tr("flow.empty.hint", language)}</p>
               </div>
             </div>
           )}
@@ -972,14 +976,14 @@ export default function FlowchartPage({ path }: { path: string }) {
                 {contextMenu.edgeId ? (
                   <button onClick={() => { pushHistory(); setConns((p) => p.filter((c) => c.id !== contextMenu.edgeId)); setSelectedEdgeIds([]); setContextMenu(null); }}
                     className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-rose-300 hover:bg-rose-400/10">
-                    <Trash2 size={14} /> Удалить связь
+                    <Trash2 size={14} /> {tr("flow.menu.deleteConnection", language)}
                   </button>
                 ) : contextMenu.nodeId ? (
                   <>
                     <button onClick={() => { const it = items.find((i) => i.id === contextMenu.nodeId); if (it) { setEditingId(it.id); setEditingText(it.text); } setContextMenu(null); }}
-                      className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-slate-200 hover:bg-white/5"><Pencil size={14} className="text-cyan-300" /> Редактировать</button>
+                      className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-slate-200 hover:bg-white/5"><Pencil size={14} className="text-cyan-300" /> {tr("flow.menu.edit", language)}</button>
                     <button onClick={() => { const id = contextMenu.nodeId!; setSelectedIds([id]); setTimeout(duplicateSelected, 0); setContextMenu(null); }}
-                      className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-slate-200 hover:bg-white/5"><Copy size={14} className="text-cyan-300" /> Дублировать</button>
+                                            className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-slate-200 hover:bg-white/5"><Copy size={14} className="text-cyan-300" /> {tr("flow.menu.duplicate", language)}</button>
                     <div className="mx-1 my-1 flex gap-1.5 p-1">
                       {COLORS.map((c) => (
                         <button key={c} onClick={() => { pushHistory(); setItems((p) => p.map((i) => (i.id === contextMenu.nodeId ? { ...i, color: c } : i))); setContextMenu(null); }}
@@ -995,11 +999,11 @@ export default function FlowchartPage({ path }: { path: string }) {
                       ))}
                     </div>
                     <button onClick={() => { const id = contextMenu.nodeId!; pushHistory(); setItems((p) => { const it = p.find((x) => x.id === id); return it ? [...p.filter((x) => x.id !== id), it] : p; }); setContextMenu(null); }}
-                      className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-slate-200 hover:bg-white/5"><ChevronsUp size={14} className="text-cyan-300" /> На передний план</button>
+                                            className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-slate-200 hover:bg-white/5"><ChevronsUp size={14} className="text-cyan-300" /> {tr("flow.menu.bringFront", language)}</button>
                     <button onClick={() => { const id = contextMenu.nodeId!; pushHistory(); setItems((p) => { const it = p.find((x) => x.id === id); return it ? [it, ...p.filter((x) => x.id !== id)] : p; }); setContextMenu(null); }}
-                      className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-slate-200 hover:bg-white/5"><ChevronsDown size={14} className="text-cyan-300" /> На задний план</button>
+                      className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-slate-200 hover:bg-white/5"><ChevronsDown size={14} className="text-cyan-300" /> {tr("flow.menu.sendBack", language)}</button>
                     <div className="my-1 border-t border-white/10" />
-                    <button onClick={deleteSelected} className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-rose-300 hover:bg-rose-400/10"><Trash2 size={14} /> Удалить</button>
+                    <button onClick={deleteSelected} className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-rose-300 hover:bg-rose-400/10"><Trash2 size={14} /> {tr("flow.menu.delete", language)}</button>
                   </>
                 ) : (
                   <>
@@ -1011,7 +1015,7 @@ export default function FlowchartPage({ path }: { path: string }) {
                         setItems((p) => [...p, it]); setSelectedIds([it.id]); setContextMenu(null);
                       }} className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-slate-200 hover:bg-white/5">
                         {t === "sticky" ? <StickyNote size={14} className="text-cyan-300" /> : t === "text" ? <Type size={14} className="text-cyan-300" /> : t === "rect" ? <Square size={14} className="text-cyan-300" /> : <Circle size={14} className="text-cyan-300" />}
-                        {t === "sticky" ? "Стикер" : t === "text" ? "Текст" : t === "rect" ? "Прямоугольник" : "Овал"}
+                         {t === "sticky" ? tr("flow.sticker", language) : t === "text" ? tr("flow.text", language) : t === "rect" ? tr("flow.rect", language) : tr("flow.oval", language)}
                       </button>
                     ))}
                     <button onClick={() => {
@@ -1057,18 +1061,18 @@ export default function FlowchartPage({ path }: { path: string }) {
                       input.click();
                     }} className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-slate-200 hover:bg-white/5">
                       <ImageIcon size={14} className="text-cyan-300" />
-                      Изображение
+                      {tr("flow.image", language)}
                     </button>
                     <div className="my-1 border-t border-white/10" />
-                    <button onClick={() => { fitView(); setContextMenu(null); }} className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-slate-200 hover:bg-white/5"><Maximize size={14} className="text-cyan-300" /> Вписать в экран</button>
-                    <button onClick={() => { saveBoard(true); setContextMenu(null); }} className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-cyan-300 hover:bg-cyan-400/10"><Save size={14} /> Сохранить</button>
+                    <button onClick={() => { fitView(); setContextMenu(null); }} className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-slate-200 hover:bg-white/5"><Maximize size={14} className="text-cyan-300" /> {tr("flow.menu.fit", language)}</button>
+                    <button onClick={() => { saveBoard(true); setContextMenu(null); }} className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-cyan-300 hover:bg-cyan-400/10"><Save size={14} /> {tr("flow.save", language)}</button>
                   </>
                 )}
               </div>
-            </>
+            </>  
           )}
         </div>
       </div>
     </div>
-  );
+  ); 
 }

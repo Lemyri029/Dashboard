@@ -6,7 +6,7 @@ import path from "path";
 const prod = process.argv[2] === "production";
 
 const pluginDir =
-  "D:/Matreshka/Dashboard/Matreshka/.obsidian/plugins/nexus-dashboard";
+  "D:/Matreshka/Dashboard/Matreshka/.obsidian/plugins/Lemo";
 
 fs.mkdirSync(pluginDir, { recursive: true });
 
