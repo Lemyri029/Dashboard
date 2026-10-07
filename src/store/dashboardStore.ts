@@ -32,12 +32,34 @@ const BLOCK_LABELS = new Proxy({} as Record<BlockType, string>, {
 
 export { BLOCK_LABELS };
 
+/* ---------- Настройки текста ---------- */
+
+export type TypographyGroup = {
+  fontSize: number;
+  fontWeight: number;
+};
+
+export type TypographySettings = {
+  sidebar: TypographyGroup;
+  dashboard: TypographyGroup;
+  blockTitle: TypographyGroup;
+  blockContent: TypographyGroup;
+};
+
+export const DEFAULT_TYPOGRAPHY: TypographySettings = {
+  sidebar: { fontSize: 13, fontWeight: 500 },
+  dashboard: { fontSize: 14, fontWeight: 400 },
+  blockTitle: { fontSize: 14, fontWeight: 600 },
+  blockContent: { fontSize: 12, fontWeight: 400 },
+};
+
 export type DashboardBackupData = {
   blocks: Block[];
   boards: Record<string, Board>;
   background: BackgroundSettings;
   theme: ThemeId;
   customLogo: string | null;
+  typography: TypographySettings;
 };
 
 export type DashboardBackupFile = {
@@ -58,6 +80,24 @@ function makeDashboardBackupFileName(): string {
   return "Lemo-backup-" + stamp + ".json";
 }
 
+function parseTypographyGroup(value: unknown, fallback: TypographyGroup): TypographyGroup {
+  if (!isRecord(value)) return fallback;
+  return {
+    fontSize: typeof value.fontSize === "number" ? value.fontSize : fallback.fontSize,
+    fontWeight: typeof value.fontWeight === "number" ? value.fontWeight : fallback.fontWeight,
+  };
+}
+
+function parseTypography(value: unknown): TypographySettings {
+  if (!isRecord(value)) return DEFAULT_TYPOGRAPHY;
+   return {
+    sidebar: parseTypographyGroup(value.sidebar, DEFAULT_TYPOGRAPHY.sidebar),
+    dashboard: parseTypographyGroup(value.dashboard, DEFAULT_TYPOGRAPHY.dashboard),
+    blockTitle: parseTypographyGroup(value.blockTitle, DEFAULT_TYPOGRAPHY.blockTitle),
+    blockContent: parseTypographyGroup(value.blockContent, DEFAULT_TYPOGRAPHY.blockContent),
+  };
+}
+
 function parseDashboardBackup(input: unknown): DashboardBackupData | null {
   if (!isRecord(input)) return null;
 
@@ -76,12 +116,13 @@ function parseDashboardBackup(input: unknown): DashboardBackupData | null {
 
   const customLogo = typeof maybeData.customLogo === "string" ? maybeData.customLogo : null;
 
-  return {
+    return {
     blocks: maybeData.blocks as Block[],
     boards: maybeData.boards as Record<string, Board>,
     background,
     theme,
     customLogo,
+    typography: parseTypography(maybeData.typography),
   };
 }
 
@@ -143,6 +184,9 @@ interface DashboardState {
   resetBackground: () => void;
   theme: ThemeId;
   setTheme: (theme: ThemeId) => void;
+  typography: TypographySettings;
+  setTypography: (group: keyof TypographySettings, patch: Partial<TypographyGroup>) => void;
+  resetTypography: () => void;
   customThemes: DashboardTheme[];
   themesLoading: boolean;
   reloadThemes: () => Promise<void>;
@@ -220,6 +264,17 @@ setApp: (app) => {
 
       theme: DEFAULT_THEME,
       setTheme: (theme) => set({ theme }),
+        typography: DEFAULT_TYPOGRAPHY,
+
+      setTypography: (group, patch) =>
+        set((s) => ({
+          typography: {
+            ...s.typography,
+            [group]: { ...s.typography[group], ...patch },
+          },
+        })),
+
+      resetTypography: () => set({ typography: DEFAULT_TYPOGRAPHY }),
 
       customThemes: [],
       themesLoading: false,
@@ -354,12 +409,13 @@ setApp: (app) => {
           app: "Lemo",
           version: DASHBOARD_BACKUP_VERSION,
           createdAt: new Date().toISOString(),
-          data: {
+           data: {
             blocks: state.blocks,
             boards: state.boards,
             background: state.background,
             theme: state.theme,
             customLogo: state.customLogo,
+            typography: state.typography,
           },
         };
       },
@@ -409,6 +465,7 @@ setApp: (app) => {
           background: data.background,
           theme: data.theme,
           customLogo: data.customLogo,
+          typography: data.typography,
           page: { name: "dashboard" },
           history: [],
         });
@@ -741,14 +798,30 @@ setApp: (app) => {
       name: "Lemo-store",
       storage: createJSONStorage(() => obsidianStorage),
       skipHydration: true,
-      partialize: (s) => ({
+       partialize: (s) => ({
         blocks: s.blocks,
         boards: s.boards,
         background: s.background,
         theme: s.theme,
         customLogo: s.customLogo,
         language: s.language,
+        typography: s.typography,
       }),
+
+            merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<DashboardState>;
+        return {
+          ...current,
+          ...p,
+          typography: {
+            sidebar: { ...DEFAULT_TYPOGRAPHY.sidebar, ...p.typography?.sidebar },
+            dashboard: { ...DEFAULT_TYPOGRAPHY.dashboard, ...p.typography?.dashboard },
+            blockTitle: { ...DEFAULT_TYPOGRAPHY.blockTitle, ...p.typography?.blockTitle },
+            blockContent: { ...DEFAULT_TYPOGRAPHY.blockContent, ...p.typography?.blockContent },
+          },
+        };
+      },
+
     }
   )
 );

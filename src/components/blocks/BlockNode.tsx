@@ -516,11 +516,8 @@ export function BlockNode({
                 (event.target as HTMLInputElement).blur();
               }
             }}
-            style={{
-              fontSize: "var(--nd-block-title-size)",
-              fontWeight: "var(--nd-block-title-weight)",
-            }}
-            className="flex-1 rounded bg-black/30 px-1 py-0.5 text-slate-100 focus:outline-none"
+            
+             className="nd-block-title flex-1 rounded bg-black/30 px-1 py-0.5 text-slate-100 focus:outline-none"
           />
         ) : (
           <h3
@@ -529,7 +526,7 @@ export function BlockNode({
               fontSize: "var(--nd-block-title-size)",
               fontWeight: "var(--nd-block-title-weight)",
             }}
-            className="flex-1 cursor-text truncate text-slate-100"
+           className="nd-block-title flex-1 cursor-text truncate text-slate-100"
             title={t("block.hint.rename", language)}
           >
             {block.title}

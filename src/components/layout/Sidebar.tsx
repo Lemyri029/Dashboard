@@ -11,6 +11,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const setCommandPaletteOpen = useDashboardStore((s) => s.setCommandPaletteOpen);
   const customLogo = useDashboardStore((s) => s.customLogo);
   const language = useDashboardStore((s) => s.language);
+  
 
   const navItems = [
     {
@@ -31,8 +32,8 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   ];
 
   return (
-    <aside
-      className="flex h-screen w-72 shrink-0 flex-col lg:h-full"
+        <aside
+      className="nd-typo-sidebar flex h-screen w-72 shrink-0 flex-col lg:h-full"
       style={{
         background: "var(--nd-bg-soft)",
         borderRight: "1px solid var(--nd-panel-border)",

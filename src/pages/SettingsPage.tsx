@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   Settings2,
   RefreshCw,
@@ -11,6 +11,8 @@ import {
   Download,
   DatabaseBackup,
   Globe,
+  Type,
+  ChevronDown,
 } from "lucide-react";
 import { useDashboardStore } from "../store/dashboardStore";
 import {
@@ -42,6 +44,81 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
   );
 }
 
+/* ---------- Сворачиваемая карточка настроек ---------- */
+
+function SettingsPanel({
+  title,
+  icon,
+  rightAction,
+  children,
+  defaultOpen = false,
+}: {
+  title: string;
+  icon: ReactNode;
+  rightAction?: ReactNode;
+  children: ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const language = useDashboardStore((s) => s.language);
+  const [open, setOpen] = useState(defaultOpen);
+
+  function togglePanel() {
+    setOpen((value) => !value);
+  }
+
+  return (
+    <section className="glass-panel rounded-xl p-5">
+      <div
+        onClick={togglePanel}
+        title={t(
+          open ? "settings.panel.collapse" : "settings.panel.expand",
+          language
+        )}
+        className={`flex cursor-pointer select-none items-center ${
+          open ? "mb-3" : ""
+        }`}
+      >
+        {/* Левая зона-распорка: той же ширины, что и правая,
+            поэтому заголовок оказывается ровно по центру */}
+        <div className="min-w-0 flex-1" />
+
+        {/* Центр: иконка + текст */}
+        <div className="flex shrink-0 items-center gap-2.5 text-sm font-semibold text-slate-100">
+          <span className="flex h-4 w-4 items-center justify-center">
+            {icon}
+          </span>
+          <span className="whitespace-nowrap leading-4">{title}</span>
+        </div>
+
+        {/* Правая зона: переключатель (если есть) + стрелка */}
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
+          {rightAction && (
+            <div
+              className="flex items-center"
+              onClick={(event) => {
+                event.stopPropagation();
+              }}
+            >
+              {rightAction}
+            </div>
+          )}
+
+          <span className="flex h-4 w-4 items-center justify-center">
+            <ChevronDown
+              size={16}
+              className={`text-slate-500 transition-transform duration-200 ${
+                open ? "rotate-180" : "rotate-0"
+              }`}
+            />
+          </span>
+        </div>
+      </div>
+
+      <div className={open ? "block" : "hidden"}>{children}</div>
+    </section>
+  );
+}
+
 /* ---------- Язык ---------- */
 
 function LanguageSection() {
@@ -49,11 +126,10 @@ function LanguageSection() {
   const setLanguage = useDashboardStore((s) => s.setLanguage);
 
   return (
-    <section className="glass-panel rounded-xl p-5">
-      <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-100">
-        <Globe size={15} className="text-amber-300" />{" "}
-        {t("settings.language.title", language)}
-      </h2>
+    <SettingsPanel
+      title={t("settings.language.title", language)}
+      icon={<Globe size={15} className="text-amber-300" />}
+    >
       <p className="mb-3 text-xs leading-relaxed text-slate-400">
         {t("settings.language.description", language)}
       </p>
@@ -72,7 +148,7 @@ function LanguageSection() {
           </button>
         ))}
       </div>
-    </section>
+     </SettingsPanel>
   );
 }
 
@@ -131,11 +207,10 @@ function LogoSection() {
   }
 
   return (
-    <section className="glass-panel rounded-xl p-5">
-      <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-100">
-        <ImageIcon size={15} className="text-cyan-300" />{" "}
-        {t("settings.logo.title", language)}
-      </h2>
+    <SettingsPanel
+      title={t("settings.logo.title", language)}
+      icon={<ImageIcon size={15} className="text-cyan-300" />}
+    >
 
       <p className="mb-3 text-xs leading-relaxed text-slate-400">
         {t("settings.logo.description", language)}
@@ -215,7 +290,7 @@ function LogoSection() {
           </li>
         </ul>
       </div>
-    </section>
+       </SettingsPanel>
   );
 }
 
@@ -286,18 +361,17 @@ function BackgroundSection() {
     if (url) pushToast("success", t("settings.background.setFromUrl", language));
   }
 
-  return (
-    <section className="glass-panel rounded-xl p-5">
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-100">
-          <ImageIcon size={15} className="text-emerald-300" />{" "}
-          {t("settings.background.title", language)}
-        </h2>
+    return (
+    <SettingsPanel
+      title={t("settings.background.title", language)}
+      icon={<ImageIcon size={15} className="text-emerald-300" />}
+      rightAction={
         <Toggle
           checked={background.enabled}
           onChange={(v) => setBackground({ enabled: v })}
         />
-      </div>
+      }
+    >
 
       <p className="mb-3 text-xs leading-relaxed text-slate-400">
         {t("settings.background.description", language)}
@@ -399,7 +473,8 @@ function BackgroundSection() {
           <RotateCcw size={12} /> {t("settings.background.reset", language)}
         </button>
       </div>
-    </section>
+    </SettingsPanel>
+
   );
 }
 
@@ -428,12 +503,11 @@ function ThemeSection() {
   // Хочешь чтобы писало "Ink Paper" - замени на getTheme(DEFAULT_THEME).label
   const defaultLabel = getTheme(DEFAULT_THEME).label;
 
-  return (
-    <section className="glass-panel rounded-xl p-5">
-      <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-100">
-        <Palette size={15} className="text-violet-300" />{" "}
-        {t("settings.theme.title", language)}
-      </h2>
+    return (
+    <SettingsPanel
+      title={t("settings.theme.title", language)}
+      icon={<Palette size={15} className="text-violet-300" />}
+    >
 
       <p className="mb-3 text-xs leading-relaxed text-slate-400">
         {t("settings.theme.description", language, { folder: THEMES_FOLDER })}
@@ -483,7 +557,250 @@ function ThemeSection() {
           ))}
         </select>
       )}
-    </section>
+     </SettingsPanel>
+  );
+}
+
+/* ---------- Типографика ---------- */
+
+function TypographySection() {
+  const typography = useDashboardStore((s) => s.typography);
+  const setTypography = useDashboardStore((s) => s.setTypography);
+  const resetTypography = useDashboardStore((s) => s.resetTypography);
+  const pushToast = useDashboardStore((s) => s.pushToast);
+  const language = useDashboardStore((s) => s.language);
+
+  const [tab, setTab] = useState<"sidebar" | "dashboard">("dashboard");
+
+  function handleReset() {
+    resetTypography();
+    pushToast("success", t("settings.typography.resetDone", language));
+  }
+
+    return (
+    <SettingsPanel
+      title={t("settings.typography.title", language)}
+      icon={<Type size={15} className="text-cyan-300" />}
+    >
+
+      <p className="mb-3 text-xs leading-relaxed text-slate-400">
+        {t("settings.typography.description", language)}
+      </p>
+
+      <div className="mb-4 flex gap-2">
+  <button
+    type="button"
+    onClick={() => setTab("dashboard")}
+    className={`flex-1 rounded-md px-3 py-2 text-xs font-medium transition ${
+      tab === "dashboard"
+        ? "bg-cyan-400/20 text-cyan-300 ring-1 ring-cyan-400/40"
+        : "bg-white/10 text-slate-400 hover:bg-white/20"
+    }`}
+  >
+    {t("settings.typography.dashboard", language)}
+  </button>
+
+  <button
+    type="button"
+    onClick={() => setTab("sidebar")}
+    className={`flex-1 rounded-md px-3 py-2 text-xs font-medium transition ${
+      tab === "sidebar"
+        ? "bg-cyan-400/20 text-cyan-300 ring-1 ring-cyan-400/40"
+        : "bg-white/10 text-slate-400 hover:bg-white/20"
+    }`}
+  >
+    {t("settings.typography.sidebar", language)}
+  </button>
+</div>
+
+      {tab === "sidebar" && (
+        <div className="space-y-4">
+          <div>
+            <div className="mb-1 flex items-center justify-between text-[11px] text-slate-400">
+              <span>{t("settings.typography.fontSize", language)}</span>
+              <span className="text-cyan-300">{typography.sidebar.fontSize}px</span>
+            </div>
+            <input
+              type="range"
+              min={11}
+              max={20}
+              step={1}
+              value={typography.sidebar.fontSize}
+              onChange={(e) =>
+                setTypography("sidebar", { fontSize: Number(e.target.value) })
+              }
+              className="w-full accent-cyan-400"
+            />
+          </div>
+
+          <div>
+            <div className="mb-1 flex items-center justify-between text-[11px] text-slate-400">
+              <span>{t("settings.typography.fontWeight", language)}</span>
+              <span className="text-cyan-300">{typography.sidebar.fontWeight}</span>
+            </div>
+            <input
+              type="range"
+              min={300}
+              max={800}
+              step={100}
+              value={typography.sidebar.fontWeight}
+              onChange={(e) =>
+                setTypography("sidebar", { fontWeight: Number(e.target.value) })
+              }
+              className="w-full accent-cyan-400"
+            />
+          </div>
+        </div>
+      )}
+
+            {tab === "dashboard" && (
+        <div className="space-y-5">
+          <div className="space-y-4">
+            <div>
+              <div className="mb-1 flex items-center justify-between text-[11px] text-slate-400">
+                <span>{t("settings.typography.fontSize", language)}</span>
+                <span className="text-cyan-300">{typography.dashboard.fontSize}px</span>
+              </div>
+              <input
+                type="range"
+                min={11}
+                max={20}
+                step={1}
+                value={typography.dashboard.fontSize}
+                onChange={(e) =>
+                  setTypography("dashboard", { fontSize: Number(e.target.value) })
+                }
+                className="w-full accent-cyan-400"
+              />
+            </div>
+
+            <div>
+              <div className="mb-1 flex items-center justify-between text-[11px] text-slate-400">
+                <span>{t("settings.typography.fontWeight", language)}</span>
+                <span className="text-cyan-300">{typography.dashboard.fontWeight}</span>
+              </div>
+              <input
+                type="range"
+                min={300}
+                max={800}
+                step={100}
+                value={typography.dashboard.fontWeight}
+                onChange={(e) =>
+                  setTypography("dashboard", { fontWeight: Number(e.target.value) })
+                }
+                className="w-full accent-cyan-400"
+              />
+            </div>
+          </div>
+
+          <div className="border-t border-white/10 pt-4">
+            <div className="mb-2 text-[11px] uppercase tracking-wide text-slate-500">
+              {t("settings.typography.blockTitles", language)}
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <div className="mb-1 flex items-center justify-between text-[11px] text-slate-400">
+                  <span>{t("settings.typography.blockTitleSize", language)}</span>
+                  <span className="text-cyan-300">
+                    {typography.blockTitle.fontSize}px
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={10}
+                  max={20}
+                  step={1}
+                  value={typography.blockTitle.fontSize}
+                  onChange={(e) =>
+                    setTypography("blockTitle", { fontSize: Number(e.target.value) })
+                  }
+                  className="w-full accent-cyan-400"
+                />
+              </div>
+
+              <div>
+                <div className="mb-1 flex items-center justify-between text-[11px] text-slate-400">
+                  <span>{t("settings.typography.blockTitleWeight", language)}</span>
+                  <span className="text-cyan-300">
+                    {typography.blockTitle.fontWeight}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={300}
+                  max={800}
+                  step={100}
+                  value={typography.blockTitle.fontWeight}
+                  onChange={(e) =>
+                    setTypography("blockTitle", { fontWeight: Number(e.target.value) })
+                  }
+                  className="w-full accent-cyan-400"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-white/10 pt-4">
+            <div className="mb-2 text-[11px] uppercase tracking-wide text-slate-500">
+              {t("settings.typography.blockContent", language)}
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <div className="mb-1 flex items-center justify-between text-[11px] text-slate-400">
+                  <span>{t("settings.typography.fontSize", language)}</span>
+                  <span className="text-cyan-300">
+                    {typography.blockContent.fontSize}px
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={9}
+                  max={18}
+                  step={1}
+                  value={typography.blockContent.fontSize}
+                  onChange={(e) =>
+                    setTypography("blockContent", { fontSize: Number(e.target.value) })
+                  }
+                  className="w-full accent-cyan-400"
+                />
+              </div>
+
+              <div>
+                <div className="mb-1 flex items-center justify-between text-[11px] text-slate-400">
+                  <span>{t("settings.typography.fontWeight", language)}</span>
+                  <span className="text-cyan-300">
+                    {typography.blockContent.fontWeight}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={300}
+                  max={800}
+                  step={100}
+                  value={typography.blockContent.fontWeight}
+                  onChange={(e) =>
+                    setTypography("blockContent", { fontWeight: Number(e.target.value) })
+                  }
+                  className="w-full accent-cyan-400"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="mt-4 flex justify-end">
+        <button
+          type="button"
+          onClick={handleReset}
+          className="flex items-center gap-1.5 rounded-md border border-rose-400/20 bg-rose-400/5 px-3 py-2 text-xs font-medium text-rose-300 hover:bg-rose-400/15"
+        >
+          <RotateCcw size={13} /> {t("settings.typography.reset", language)}
+        </button>
+      </div>
+    </SettingsPanel>
   );
 }
 
@@ -523,11 +840,10 @@ function BackupSection() {
   }
 
   return (
-    <section className="glass-panel rounded-xl p-5">
-      <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-100">
-        <DatabaseBackup size={15} className="text-amber-300" />{" "}
-        {t("settings.backup.title", language)}
-      </h2>
+    <SettingsPanel
+      title={t("settings.backup.title", language)}
+      icon={<DatabaseBackup size={15} className="text-amber-300" />}
+    >
 
       <p className="mb-3 text-xs leading-relaxed text-slate-400">
         {t("settings.backup.description", language)}
@@ -585,7 +901,7 @@ function BackupSection() {
           {t("settings.backup.warning", language)}
         </p>
       </div>
-    </section>
+     </SettingsPanel>
   );
 }
 
@@ -641,49 +957,45 @@ export default function SettingsPage() {
 
           <LanguageSection />
 
-          <section className="glass-panel rounded-xl p-5">
-            <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-100">
-              <RefreshCw size={15} className="text-cyan-300" />{" "}
-              {t("settings.vault.title", language)}
-            </h2>
+          <SettingsPanel
+  title={t("settings.vault.title", language)}
+  icon={<RefreshCw size={15} className="text-cyan-300" />}
+>
+  <p className="mb-3 text-xs leading-relaxed text-slate-400">
+    {t("settings.vault.description", language, { count: vault.length })}
+  </p>
 
-            <p className="mb-3 text-xs leading-relaxed text-slate-400">
-              {t("settings.vault.description", language, { count: vault.length })}
-            </p>
-
-            <button
-              onClick={manualRefresh}
-              className="flex items-center gap-1.5 rounded-md bg-cyan-400/15 px-3.5 py-2 text-xs font-medium text-cyan-300 hover:bg-cyan-400/25"
-            >
-              <RefreshCw size={13} /> {t("settings.vault.refresh", language)}
-            </button>
-          </section>
+  <button
+    onClick={manualRefresh}
+    className="flex items-center gap-1.5 rounded-md bg-cyan-400/15 px-3.5 py-2 text-xs font-medium text-cyan-300 hover:bg-cyan-400/25"
+  >
+    <RefreshCw size={13} /> {t("settings.vault.refresh", language)}
+  </button>
+</SettingsPanel>
 
           <BackupSection />
 
-          <section className="glass-panel rounded-xl p-5">
-            <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-100">
-              <Palette size={15} className="text-violet-300" />{" "}
-              {t("settings.dashboard.title", language)}
-            </h2>
+          <SettingsPanel
+  title={t("settings.dashboard.title", language)}
+  icon={<Palette size={15} className="text-violet-300" />}
+>
+  <div className="flex items-center justify-between gap-3 rounded-md bg-white/[0.02] px-3 py-2">
+    <span className="text-xs text-slate-300">
+      {t("settings.dashboard.reset", language)}
+    </span>
 
-            <div className="flex items-center justify-between gap-3 rounded-md bg-white/[0.02] px-3 py-2">
-              <span className="text-xs text-slate-300">
-                {t("settings.dashboard.reset", language)}
-              </span>
-
-              <button
-                onClick={handleReset}
-                className="shrink-0 flex items-center gap-1.5 rounded-md border border-rose-400/20 bg-rose-400/5 px-2.5 py-1 text-[11px] text-rose-300 hover:bg-rose-400/15"
-              >
-                <Trash2 size={12} /> {t("settings.dashboard.clear", language)}
-              </button>
-            </div>
-          </section>
+    <button
+      onClick={handleReset}
+      className="flex shrink-0 items-center gap-1.5 rounded-md border border-rose-400/20 bg-rose-400/5 px-2.5 py-1 text-[11px] text-rose-300 hover:bg-rose-400/15"
+    >
+      <Trash2 size={12} /> {t("settings.dashboard.clear", language)}
+    </button>
+  </div>
+</SettingsPanel>
         </div>
 
         {/* ---------- Правая колонка: Оформление ---------- */}
-        <div className="space-y-4">
+          <div className="space-y-4">
           <h2 className="px-1 text-sm font-semibold text-slate-300">
             {t("settings.section.appearance", language)}
           </h2>
@@ -691,6 +1003,7 @@ export default function SettingsPage() {
           <LogoSection />
           <BackgroundSection />
           <ThemeSection />
+          <TypographySection />
         </div>
       </div>
     </div>

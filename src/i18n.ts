@@ -62,6 +62,9 @@ const ru: Record<string, string> = {
   "dashboard.empty.subtitle": "Нажмите правой кнопкой мыши на свободном месте, чтобы добавить блок.",
   
   // Общее и Настройки
+  "settings.panel.expand": "Развернуть раздел",
+  "settings.panel.collapse": "Свернуть раздел",
+
   "settings.title": "Настройки",
   "settings.section.system": "Системные",
   "settings.section.appearance": "Оформление",
@@ -125,6 +128,20 @@ const ru: Record<string, string> = {
   "settings.theme.templateCreated": "Шаблон создан",
   "settings.theme.templateFailed": "Не удалось создать шаблон",
   "settings.theme.obsidianError": "Obsidian не подключён",
+
+    "settings.typography.title": "Текст",
+  "settings.typography.description":
+    "Настройте размер и толщину текста отдельно для боковой панели и дашборда.",
+  "settings.typography.sidebar": "Боковая панель",
+  "settings.typography.dashboard": "Дашборд",
+  "settings.typography.fontSize": "Размер текста",
+  "settings.typography.fontWeight": "Толщина текста",
+  "settings.typography.blockTitles": "Названия блоков",
+  "settings.typography.blockTitleSize": "Размер названий",
+  "settings.typography.blockTitleWeight": "Толщина названий",
+  "settings.typography.reset": "Сбросить текст",
+  "settings.typography.resetDone": "Настройки текста сброшены",
+  "settings.typography.blockContent": "Файлы, папки, кнопки",
 
   "settings.backup.title": "Резервная копия дашборда",
   "settings.backup.description":
@@ -385,6 +402,9 @@ const en: Record<string, string> = {
   "dashboard.empty.subtitle": "Right-click on an empty space to add a block.",
 
   // Common & Settings
+  "settings.panel.expand": "Expand section",
+  "settings.panel.collapse": "Collapse section",
+
   "settings.title": "Settings",
   "settings.section.system": "System",
   "settings.section.appearance": "Appearance",
@@ -436,6 +456,20 @@ const en: Record<string, string> = {
   "settings.background.setFromDisk": "Background uploaded",
   "settings.background.setFromUrl": "Background set from URL",
   "settings.background.uploadFailed": "Failed to upload background",
+
+    "settings.typography.title": "Text",
+  "settings.typography.description":
+    "Adjust font size and weight separately for the sidebar and the dashboard.",
+  "settings.typography.sidebar": "Sidebar",
+  "settings.typography.dashboard": "Dashboard",
+  "settings.typography.fontSize": "Font size",
+  "settings.typography.fontWeight": "Font weight",
+  "settings.typography.blockTitles": "Block titles",
+  "settings.typography.blockTitleSize": "Title size",
+  "settings.typography.blockTitleWeight": "Title weight",
+  "settings.typography.reset": "Reset text",
+  "settings.typography.resetDone": "Text settings reset",
+    "settings.typography.blockContent": "Files, folders, buttons",
 
     "settings.theme.title": "Theme",
   "settings.theme.description":
