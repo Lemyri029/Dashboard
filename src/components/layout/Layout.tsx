@@ -14,7 +14,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const commandPaletteOpen = useDashboardStore((s) => s.commandPaletteOpen);
   const theme = useDashboardStore((s) => s.theme);
   const customThemes = useDashboardStore((s) => s.customThemes);
-
+  const typography = useDashboardStore((s) => s.typography);
   const activeTheme = getTheme(theme, customThemes);
 
   const [bgUrl, setBgUrl] = useState<string | null>(null);
@@ -27,7 +27,15 @@ export function Layout({ children }: { children: ReactNode }) {
     <div
       className="Lemo-root relative h-screen w-full overflow-hidden"
       data-theme={activeTheme.id}
-      style={getThemeStyle(theme, customThemes)}
+            style={{
+        ...getThemeStyle(theme, customThemes),
+        "--nd-dashboard-font-size": typography.dashboard.fontSize + "px",
+        "--nd-dashboard-font-weight": String(typography.dashboard.fontWeight),
+        "--nd-block-title-size": typography.blockTitle.fontSize + "px",
+        "--nd-block-title-weight": String(typography.blockTitle.fontWeight),
+        "--nd-bcontent-size": typography.blockContent.fontSize + "px",
+        "--nd-bcontent-weight": String(typography.blockContent.fontWeight),
+      } as React.CSSProperties}
     >
       {activeTheme.css && <style>{activeTheme.css}</style>}
 
@@ -60,7 +68,15 @@ export function Layout({ children }: { children: ReactNode }) {
         <div className="flex h-full w-full">
           <Sidebar onNavigate={() => setMobileOpen(false)} />
           <div className="flex min-w-0 flex-1 flex-col">
-            <main className="min-h-0 flex-1 overflow-auto">{children}</main>
+            <main
+              className="min-h-0 flex-1 overflow-auto"
+              style={{
+                fontSize: typography.dashboard.fontSize + "px",
+                fontWeight: typography.dashboard.fontWeight,
+              }}
+            >
+              {children}
+            </main>
           </div>
         </div>
         <Toasts />

@@ -498,7 +498,7 @@ export function BlockNode({
           <Icon size={10} className={accent.text} />
         </div>
 
-        {editingTitle ? (
+                {editingTitle ? (
           <input
             autoFocus
             value={titleDraft}
@@ -516,12 +516,20 @@ export function BlockNode({
                 (event.target as HTMLInputElement).blur();
               }
             }}
-            className="flex-1 rounded bg-black/30 px-1 py-0.5 text-xs text-slate-100 focus:outline-none"
+            style={{
+              fontSize: "var(--nd-block-title-size)",
+              fontWeight: "var(--nd-block-title-weight)",
+            }}
+            className="flex-1 rounded bg-black/30 px-1 py-0.5 text-slate-100 focus:outline-none"
           />
         ) : (
           <h3
             onDoubleClick={() => setEditingTitle(true)}
-            className="flex-1 cursor-text truncate text-xs font-semibold text-slate-100"
+            style={{
+              fontSize: "var(--nd-block-title-size)",
+              fontWeight: "var(--nd-block-title-weight)",
+            }}
+            className="flex-1 cursor-text truncate text-slate-100"
             title={t("block.hint.rename", language)}
           >
             {block.title}
@@ -536,9 +544,9 @@ export function BlockNode({
 </span>
       </div>
 
-      {!collapsed && (
+       {!collapsed && (
         <div className="space-y-2 px-2.5 pb-2.5">
-          {renderContent()}
+          <div className="nd-block-content space-y-2">{renderContent()}</div>
 
           {block.children.length > 0 && (
   <div className="space-y-1.5 pl-2.5">
