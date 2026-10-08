@@ -73,6 +73,14 @@ export interface BlockData {
   items?: ChecklistItem[];
   boardIds?: string[];
 }
+
+export interface BlockGridPosition {
+  col: number;
+  row: number;
+}
+
+export type BlockGridLayouts = Record<string, BlockGridPosition>;
+
 export interface Block {
   id: string;
   type: BlockType;
@@ -82,6 +90,17 @@ export interface Block {
   collapsed?: boolean;
   data: BlockData;
   children: Block[];
+
+  /**
+   * Сохранённые координаты блока для каждого количества колонок.
+   *
+   * Пример:
+   * {
+   *   "4": { col: 0, row: 0 },
+   *   "6": { col: 4, row: 12 }
+   * }
+   */
+  gridLayouts?: BlockGridLayouts;
 }
 
 export interface Board {
@@ -144,7 +163,7 @@ export type AppTheme = {
   effects?: {
     blur?: string;
     radius?: string;
-  }
-}
+  };
+};
 
 export type LanguageId = "ru" | "en";

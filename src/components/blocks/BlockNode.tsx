@@ -3,6 +3,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  type DragEvent as ReactDragEvent,
   type MouseEvent as ReactMouseEvent,
 } from "react";
 import { createPortal } from "react-dom";
@@ -90,13 +91,13 @@ function BlockContextMenu({
   onSetAccent: (accent: AccentName) => void;
   onAdd: (type: BlockType) => void;
   onDelete: () => void;
-    onAttachFile?: () => void;
+  onAttachFile?: () => void;
   onAttachFolder?: () => void;
   onAttachFlowchart?: () => void;
   onEditNote?: () => void;
   onClose: () => void;
 }) {
-    const language = useDashboardStore((s) => s.language);
+  const language = useDashboardStore((s) => s.language);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const [panel, setPanel] = useState<"colors" | "add" | null>(null);
@@ -175,7 +176,7 @@ function BlockContextMenu({
     return null;
   }
 
-      const hasExtraAction = Boolean(
+  const hasExtraAction = Boolean(
     onAttachFile || onAttachFolder || onAttachFlowchart || onEditNote
   );
 
@@ -222,7 +223,7 @@ function BlockContextMenu({
           {t("block.menu.attachFolder", language)}
         </button>
       )}
-            {onAttachFlowchart && (
+      {onAttachFlowchart && (
         <button
           type="button"
           onClick={() => {
@@ -302,7 +303,7 @@ function BlockContextMenu({
               className={cn(
                 "h-5 w-5 rounded-full ring-1 ring-white/20 transition-transform hover:scale-125",
                 currentAccent === accent &&
-                  "scale-110 ring-2 ring-white shadow-md"
+                "scale-110 ring-2 ring-white shadow-md"
               )}
               title={accent}
             />
@@ -351,8 +352,8 @@ function BlockContextMenu({
               />
 
               <span className="truncate">
-  {t("block." + option.type, language)}
-</span>
+                {t("block." + option.type, language)}
+              </span>
             </button>
           ))}
         </div>
@@ -381,17 +382,22 @@ export function BlockNode({
   block,
   depth = 0,
   boardId,
+  parentId = null,
 }: {
   block: Block;
   depth?: number;
   boardId?: string;
+  parentId?: string | null;
 }) {
   const toggleCollapse = useDashboardStore((s) => s.toggleCollapse);
-    const language = useDashboardStore((s) => s.language);
+  const language = useDashboardStore((s) => s.language);
   const removeBlock = useDashboardStore((s) => s.removeBlock);
   const updateBlock = useDashboardStore((s) => s.updateBlock);
   const addBlock = useDashboardStore((s) => s.addBlock);
+  const reorderBlocks = useDashboardStore((s) => s.reorderBlocks);
+  const moveBlock = useDashboardStore((s) => s.moveBlock);
 
+  const [isDragOver, setIsDragOver] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(block.title);
 
@@ -426,6 +432,128 @@ export function BlockNode({
     });
   }
 
+  function handleHeaderDragStart(
+    event: ReactDragEvent<HTMLDivElement>
+  ) {
+    if (event.defaultPrevented || editingTitle) {
+      event.preventDefault();
+      return;
+    }
+
+    const payload = JSON.stringify({
+      kind: "lemo-block",
+      id: block.id,
+      parentId,
+    });
+
+    event.dataTransfer.effectAllowed = "move";
+
+    // Основной формат.
+    event.dataTransfer.setData(
+      "application/x-lemo-block",
+      payload
+    );
+
+    // Запасной формат для совместимости с Electron / Obsidian.
+    event.dataTransfer.setData("text/plain", payload);
+    (window as any).__lemoDragInfo = { id: block.id, parentId };
+     window.dispatchEvent(
+      new CustomEvent("lemo-block-drag-start", {
+        detail: {
+          id: block.id,
+          parentId,
+        },
+      })
+    );
+  }
+
+  function handleBlockDragOver(
+  event: ReactDragEvent<HTMLDivElement>
+) {
+  const info = (window as any).__lemoDragInfo as
+    | { id: string; parentId: string | null }
+    | undefined;
+
+  // Нет перетаскивания или блок тащат на самого себя — пропускаем.
+  if (!info || info.id === block.id) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+  event.dataTransfer.dropEffect = "move";
+  setIsDragOver(true);
+}
+
+  function handleBlockDragLeave(
+    event: ReactDragEvent<HTMLDivElement>
+  ) {
+    const nextTarget = event.relatedTarget;
+
+    // Не выключаем подсветку, когда курсор просто проходит
+    // над дочерними HTML-элементами того же блока.
+    if (
+      nextTarget instanceof Node &&
+      event.currentTarget.contains(nextTarget)
+    ) {
+      return;
+    }
+
+    setIsDragOver(false);
+  }
+
+ function handleBlockDrop(
+  event: ReactDragEvent<HTMLDivElement>
+) {
+  setIsDragOver(false);
+
+  const raw =
+    event.dataTransfer.getData("application/x-lemo-block") ||
+    event.dataTransfer.getData("text/plain");
+
+  if (!raw) return;
+
+  try {
+    const dragged = JSON.parse(raw) as {
+      kind?: string;
+      id?: string;
+      parentId?: string | null;
+    };
+
+    if (
+      dragged.kind !== "lemo-block" ||
+      typeof dragged.id !== "string" ||
+      (dragged.parentId !== null &&
+        typeof dragged.parentId !== "string")
+    ) {
+      return;
+    }
+
+    // Нельзя бросать блок на самого себя.
+    if (dragged.id === block.id) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    window.dispatchEvent(new CustomEvent("lemo-block-drag-end"));
+
+    // Соседи внутри одного родителя → меняем порядок (как раньше).
+    if (dragged.parentId === parentId && parentId !== null) {
+      reorderBlocks(parentId, dragged.id, block.id, boardId);
+      return;
+    }
+
+    // Все остальные случаи → вкладываем блок внутрь этого блока.
+    moveBlock(dragged.id, block.id, boardId);
+  } catch {
+    // Некорректные данные перетаскивания игнорируем.
+  }
+}
+
+  function handleHeaderDragEnd() {
+  delete (window as any).__lemoDragInfo;
+  setIsDragOver(false);
+  window.dispatchEvent(
+    new CustomEvent("lemo-block-drag-end")
+  );
+}
   function renderContent() {
     switch (block.type) {
       case "note":
@@ -453,8 +581,22 @@ export function BlockNode({
 
   return (
     <div
+  data-dashboard-block="true"
+  onDragEnter={handleBlockDragOver}
+  onDragOver={handleBlockDragOver}
+  onDragLeave={handleBlockDragLeave}
+  onDrop={handleBlockDrop}
+      style={{
+        outline: isDragOver
+          ? "2px solid #22d3ee"
+          : undefined,
+        outlineOffset: isDragOver
+          ? "2px"
+          : undefined,
+      }}
       className={cn(
         "glass-panel relative min-w-0 overflow-hidden rounded-lg ring-1 transition-shadow",
+        isDragOver && "outline outline-2 outline-cyan-400/70",
         accent.ring,
         depth === 0 && "shadow-md shadow-black/30"
       )}
@@ -468,19 +610,31 @@ export function BlockNode({
 
       {/* ШАПКА БЛОКА: ПКМ открывает контекстное меню */}
       <div
+        draggable={!editingTitle}
+        onDragStart={handleHeaderDragStart}
+        onDragEnd={handleHeaderDragEnd}
         onContextMenu={handleHeaderContextMenu}
-        className="flex items-center gap-1.5 px-2.5 py-1.5"
+        className={cn(
+          "flex select-none items-center gap-1.5 px-2.5 py-1.5",
+          !editingTitle && "cursor-grab active:cursor-grabbing"
+        )}
         title={t("block.hint.contextMenu", language)}
       >
+
         <button
           type="button"
+          draggable={false}
+          onDragStart={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+          }}
           onClick={() => toggleCollapse(block.id, boardId)}
           className="text-slate-500 hover:text-slate-300"
           title={
-  collapsed
-    ? t("block.hint.expand", language)
-    : t("block.hint.collapse", language)
-}
+            collapsed
+              ? t("block.hint.expand", language)
+              : t("block.hint.collapse", language)
+          }
         >
           {collapsed ? (
             <ChevronRight size={12} />
@@ -498,9 +652,14 @@ export function BlockNode({
           <Icon size={10} className={accent.text} />
         </div>
 
-                {editingTitle ? (
+        {editingTitle ? (
           <input
             autoFocus
+            draggable={false}
+            onDragStart={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+            }}
             value={titleDraft}
             onChange={(event) => setTitleDraft(event.target.value)}
             onBlur={() => {
@@ -516,8 +675,8 @@ export function BlockNode({
                 (event.target as HTMLInputElement).blur();
               }
             }}
-            
-             className="nd-block-title flex-1 rounded bg-black/30 px-1 py-0.5 text-slate-100 focus:outline-none"
+
+            className="nd-block-title flex-1 rounded bg-black/30 px-1 py-0.5 text-slate-100 focus:outline-none"
           />
         ) : (
           <h3
@@ -526,7 +685,7 @@ export function BlockNode({
               fontSize: "var(--nd-block-title-size)",
               fontWeight: "var(--nd-block-title-weight)",
             }}
-           className="nd-block-title flex-1 cursor-text truncate text-slate-100"
+            className="nd-block-title flex-1 cursor-text truncate text-slate-100"
             title={t("block.hint.rename", language)}
           >
             {block.title}
@@ -534,33 +693,34 @@ export function BlockNode({
         )}
 
         <span className="hidden text-[9px] uppercase tracking-wide text-slate-500 sm:inline">
-  {block.children.length > 0 &&
-    t("block.nestedCount", language, {
-      count: block.children.length,
-    })}
-</span>
+          {block.children.length > 0 &&
+            t("block.nestedCount", language, {
+              count: block.children.length,
+            })}
+        </span>
       </div>
 
-       {!collapsed && (
+      {!collapsed && (
         <div className="space-y-2 px-2.5 pb-2.5">
           <div className="nd-block-content space-y-2">{renderContent()}</div>
 
           {block.children.length > 0 && (
-  <div className="space-y-1.5 pl-2.5">
-    {block.children.map((child) => (
-      <BlockNode
-        key={child.id}
-        block={child}
-        depth={depth + 1}
-        boardId={boardId}
-      />
-    ))}
-  </div>
-)}
+            <div className="space-y-1.5 pl-2.5">
+              {block.children.map((child) => (
+                <BlockNode
+                  key={child.id}
+                  block={child}
+                  depth={depth + 1}
+                  boardId={boardId}
+                  parentId={block.id}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-            <BlockContextMenu
+      <BlockContextMenu
         open={contextMenu.open}
         x={contextMenu.x}
         y={contextMenu.y}
@@ -575,37 +735,37 @@ export function BlockNode({
         onAttachFile={
           block.type === "file-list"
             ? () => {
-                window.dispatchEvent(
-                  new CustomEvent(`open-file-picker-${block.id}`)
-                );
-              }
+              window.dispatchEvent(
+                new CustomEvent(`open-file-picker-${block.id}`)
+              );
+            }
             : undefined
         }
         onAttachFolder={
           block.type === "file-list"
             ? () => {
-                window.dispatchEvent(
-                  new CustomEvent(`open-folder-picker-${block.id}`)
-                );
-              }
+              window.dispatchEvent(
+                new CustomEvent(`open-folder-picker-${block.id}`)
+              );
+            }
             : undefined
         }
         onAttachFlowchart={
           block.type === "flowchart"
             ? () => {
-                window.dispatchEvent(
-                  new CustomEvent(`open-flowchart-picker-${block.id}`)
-                );
-              }
+              window.dispatchEvent(
+                new CustomEvent(`open-flowchart-picker-${block.id}`)
+              );
+            }
             : undefined
         }
         onEditNote={
           block.type === "note"
             ? () => {
-                window.dispatchEvent(
-                  new CustomEvent(`open-note-editor-${block.id}`)
-                );
-              }
+              window.dispatchEvent(
+                new CustomEvent(`open-note-editor-${block.id}`)
+              );
+            }
             : undefined
         }
         onClose={closeContextMenu}

@@ -4,7 +4,7 @@ import {
 } from "react";
 import { ArrowLeft, LayoutList } from "lucide-react";
 import { useDashboardStore } from "../store/dashboardStore";
-import { BlockNode } from "../components/blocks/BlockNode";
+import { BlockGrid } from "../components/blocks/BlockGrid";
 import { AddBlockContextMenu } from "../components/blocks/AddBlockMenu";
 
 type ContextMenuState = {
@@ -138,23 +138,14 @@ export default function BoardPage({ boardId }: { boardId: string }) {
           )}
         </div>
 
-        {/* Сетка блоков */}
-        {board.blocks.length > 0 ? (
-          <div
-            className="gap-3 space-y-3 [&>*]:break-inside-avoid"
-            style={{ columnWidth: "350px" }}
-          >
-            {board.blocks.map((block) => (
-              <div
-                key={block.id}
-                data-dashboard-block="true"
-                className="mb-3"
-              >
-                <BlockNode block={block} boardId={boardId} />
-              </div>
-            ))}
-          </div>
-        ) : (
+        {/* Адаптивная сетка блоков */}
+{board.blocks.length > 0 ? (
+  <BlockGrid
+    blocks={board.blocks}
+    boardId={boardId}
+    minHeight={600}
+  />
+) : (
           <div className="flex min-h-[300px] flex-col items-center justify-center rounded-xl border border-dashed border-white/10 text-slate-500">
             <p className="mb-2 text-sm">Список пуст</p>
 
@@ -178,4 +169,4 @@ export default function BoardPage({ boardId }: { boardId: string }) {
       />
     </div>
   );
-}
+} 

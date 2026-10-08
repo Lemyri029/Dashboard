@@ -4,6 +4,7 @@ import { v4 as uuid } from "uuid";
 import type { App } from "obsidian";
 import type {
   Block,
+   BlockGridPosition,
   BlockType,
   Board,
   FlowchartDoc,
@@ -174,6 +175,186 @@ function removeFromTree(blocks: Block[], id: string): Block[] {
     .map((b) => (b.children.length ? { ...b, children: removeFromTree(b.children, id) } : b));
 }
 
+function detachFromTree(
+  blocks: Block[],
+  id: string
+): { blocks: Block[]; detached: Block | null } {
+  const directIndex = blocks.findIndex((block) => block.id === id);
+
+  if (directIndex !== -1) {
+    const detached = blocks[directIndex];
+
+    return {
+      blocks: blocks.filter((_, index) => index !== directIndex),
+      detached,
+    };
+  }
+
+  for (let index = 0; index < blocks.length; index += 1) {
+    const block = blocks[index];
+
+    if (block.children.length === 0) {
+      continue;
+    }
+
+    const result = detachFromTree(block.children, id);
+
+    if (result.detached) {
+      const nextBlocks = [...blocks];
+      nextBlocks[index] = {
+        ...block,
+        children: result.blocks,
+      };
+
+      return {
+        blocks: nextBlocks,
+        detached: result.detached,
+      };
+    }
+  }
+
+  return {
+    blocks,
+    detached: null,
+  };
+}
+
+function findInTree(blocks: Block[], id: string): Block | null {
+  for (const block of blocks) {
+    if (block.id === id) return block;
+    const found = findInTree(block.children, id);
+    if (found) return found;
+  }
+  return null;
+}
+
+function moveBlockInTree(
+  blocks: Block[],
+  blockId: string,
+  targetParentId: string | null
+): Block[] {
+  const moving = findInTree(blocks, blockId);
+  if (!moving) return blocks;
+
+  if (targetParentId !== null) {
+    // Нельзя вкладывать блок в самого себя.
+    if (targetParentId === blockId) return blocks;
+    // Нельзя вкладывать блок в его собственного потомка.
+    if (findInTree(moving.children, targetParentId)) return blocks;
+    // Целевой блок должен существовать.
+    if (!findInTree(blocks, targetParentId)) return blocks;
+  }
+
+  const without = removeFromTree(blocks, blockId);
+
+  // При вложении убираем сохранённые координаты сетки.
+  const prepared: Block =
+    targetParentId === null
+      ? moving
+      : { ...moving, gridLayouts: undefined };
+
+  return insertChild(without, targetParentId, prepared);
+}
+
+function reorderList(
+  blocks: Block[],
+  activeId: string,
+  overId: string
+): Block[] {
+  const activeIndex = blocks.findIndex((block) => block.id === activeId);
+  const overIndex = blocks.findIndex((block) => block.id === overId);
+
+  if (
+    activeIndex === -1 ||
+    overIndex === -1 ||
+    activeIndex === overIndex
+  ) {
+    return blocks;
+  }
+
+  const next = [...blocks];
+
+  // Не вставляем блок между элементами, а меняем два блока местами.
+  [next[activeIndex], next[overIndex]] = [
+    next[overIndex],
+    next[activeIndex],
+  ];
+
+  return next;
+}
+
+function reorderTree(
+  blocks: Block[],
+  parentId: string | null,
+  activeId: string,
+  overId: string
+): Block[] {
+  // Перестановка корневых блоков.
+  if (parentId === null) {
+    return reorderList(blocks, activeId, overId);
+  }
+
+  // Перестановка дочерних блоков заданного родителя.
+  return blocks.map((block) => {
+    if (block.id === parentId) {
+      return {
+        ...block,
+        children: reorderList(block.children, activeId, overId),
+      };
+    }
+
+    if (block.children.length > 0) {
+      return {
+        ...block,
+        children: reorderTree(
+          block.children,
+          parentId,
+          activeId,
+          overId
+        ),
+      };
+    }
+
+    return block;
+  });
+}
+
+function applyRootGridPositions(
+  blocks: Block[],
+  columns: number,
+  positions: Record<string, BlockGridPosition>
+): Block[] {
+  const layoutKey = String(columns);
+
+  return blocks.map((block) => {
+    const position = positions[block.id];
+
+    if (!position) {
+      return block;
+    }
+
+    const currentPosition = block.gridLayouts?.[layoutKey];
+
+    if (
+      currentPosition?.col === position.col &&
+      currentPosition?.row === position.row
+    ) {
+      return block;
+    }
+
+    return {
+      ...block,
+      gridLayouts: {
+        ...(block.gridLayouts ?? {}),
+        [layoutKey]: {
+          col: Math.max(0, Math.floor(position.col)),
+          row: Math.max(0, Math.floor(position.row)),
+        },
+      },
+    };
+  });
+}
+
 interface DashboardState {
   app: App | null;
   setApp: (app: App) => void;
@@ -196,6 +377,25 @@ interface DashboardState {
   updateBlock: (id: string, patch: Partial<Block>, boardId?: string) => void;
   updateBlockData: (id: string, patch: Partial<Block["data"]>, boardId?: string) => void;
   toggleCollapse: (id: string, boardId?: string) => void;
+    reorderBlocks: (
+    parentId: string | null,
+    activeId: string,
+    overId: string,
+    boardId?: string
+  ) => void;
+
+  moveBlock: (
+  blockId: string,
+  targetParentId: string | null,
+  boardId?: string
+) => void;
+
+    setBlockGridPositions: (
+    columns: number,
+    positions: Record<string, BlockGridPosition>,
+    boardId?: string
+  ) => void;
+  
   resetDashboard: () => void;
   exportBackup: () => DashboardBackupFile;
   downloadBackup: () => void;
@@ -320,20 +520,55 @@ setApp: (app) => {
       },
 
       removeBlock: (id, boardId) => {
-        if (!boardId) {
-          set((s) => ({ blocks: removeFromTree(s.blocks, id) }));
-        } else {
-          set((s) => ({
-            boards: {
-              ...s.boards,
-              [boardId]: {
-                ...s.boards[boardId],
-                blocks: removeFromTree(s.boards[boardId]?.blocks ?? [], id),
-              },
-            },
-          }));
-        }
+  if (!boardId) {
+    set((state) => {
+      const result = detachFromTree(state.blocks, id);
+
+      if (!result.detached) {
+        return state;
+      }
+
+      // Дети удаляемого блока становятся корневыми блоками дашборда.
+      return {
+        blocks: [
+          ...result.blocks,
+          ...result.detached.children,
+        ],
+      };
+    });
+
+    return;
+  }
+
+  set((state) => {
+    const board = state.boards[boardId];
+
+    if (!board) {
+      return state;
+    }
+
+    const result = detachFromTree(board.blocks, id);
+
+    if (!result.detached) {
+      return state;
+    }
+
+    // Дети удаляемого блока становятся корневыми
+    // внутри текущей доски.
+    return {
+      boards: {
+        ...state.boards,
+        [boardId]: {
+          ...board,
+          blocks: [
+            ...result.blocks,
+            ...result.detached.children,
+          ],
+        },
       },
+    };
+  });
+},
 
       updateBlock: (id, patch, boardId) => {
         if (!boardId) {
@@ -391,6 +626,100 @@ setApp: (app) => {
             },
           }));
         }
+      },
+
+      reorderBlocks: (parentId, activeId, overId, boardId) => {
+        if (activeId === overId) return;
+
+        if (!boardId) {
+          set((state) => ({
+            blocks: reorderTree(
+              state.blocks,
+              parentId,
+              activeId,
+              overId
+            ),
+          }));
+          return;
+        }
+
+        set((state) => ({
+          boards: {
+            ...state.boards,
+            [boardId]: {
+              ...state.boards[boardId],
+              blocks: reorderTree(
+                state.boards[boardId]?.blocks ?? [],
+                parentId,
+                activeId,
+                overId
+              ),
+            },
+          },
+        }));
+      },
+
+            moveBlock: (blockId, targetParentId, boardId) => {
+        if (blockId === targetParentId) return;
+
+        if (!boardId) {
+          set((state) => ({
+            blocks: moveBlockInTree(state.blocks, blockId, targetParentId),
+          }));
+          return;
+        }
+
+        set((state) => {
+          const board = state.boards[boardId];
+          if (!board) return state;
+          return {
+            boards: {
+              ...state.boards,
+              [boardId]: {
+                ...board,
+                blocks: moveBlockInTree(board.blocks, blockId, targetParentId),
+              },
+            },
+          };
+        });
+      },
+
+      setBlockGridPositions: (columns, positions, boardId) => {
+        if (columns < 1) return;
+
+        if (!boardId) {
+          set((state) => ({
+            blocks: applyRootGridPositions(
+              state.blocks,
+              columns,
+              positions
+            ),
+          }));
+
+          return;
+        }
+
+        set((state) => {
+          const board = state.boards[boardId];
+
+          if (!board) {
+            return state;
+          }
+
+          return {
+            boards: {
+              ...state.boards,
+              [boardId]: {
+                ...board,
+                blocks: applyRootGridPositions(
+                  board.blocks,
+                  columns,
+                  positions
+                ),
+              },
+            },
+          };
+        });
       },
 
       resetDashboard: () => {

@@ -127,16 +127,44 @@ export function ChecklistContent({ block, boardId }: { block: Block; boardId?: s
   const items = block.data.items ?? [];
 
   function toggle(id: string) {
-    updateBlockData(block.id, { items: items.map((i) => (i.id === id ? { ...i, done: !i.done } : i)) }, boardId);
-  }
+  const updatedItems = items.map((item) =>
+    item.id === id
+      ? { ...item, done: !item.done }
+      : item
+  );
+
+  const sortedItems = [
+    ...updatedItems.filter((item) => !item.done),
+    ...updatedItems.filter((item) => item.done),
+  ];
+
+  updateBlockData(
+    block.id,
+    { items: sortedItems },
+    boardId
+  );
+}
   function remove(id: string) {
     updateBlockData(block.id, { items: items.filter((i) => i.id !== id) }, boardId);
   }
   function add() {
-    if (!text.trim()) return;
-    updateBlockData(block.id, { items: [...items, { id: uuid(), label: text.trim(), done: false }] }, boardId);
-    setText("");
-  }
+  if (!text.trim()) return;
+
+  const newItem = {
+    id: uuid(),
+    label: text.trim(),
+    done: false,
+  };
+
+  const nextItems = [
+    newItem,
+    ...items.filter((item) => !item.done),
+    ...items.filter((item) => item.done),
+  ];
+
+  updateBlockData(block.id, { items: nextItems }, boardId);
+  setText("");
+}
 
   return (
     <div className="space-y-1.5">
